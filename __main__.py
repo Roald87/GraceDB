@@ -23,7 +23,8 @@ async def send_welcome(message: types.Message):
     This handler will be called when client send `/start` or `/help` commands.
     """
     await message.reply(
-        "I'll show you the latest LIGO/Virgo gravitational wave events.",
+        "Get information on LIGO/Virgo gravitational wave events.\n"
+        "Use /latest to see the latest event.",
         reply=False)
 
 
@@ -37,6 +38,13 @@ async def send_latest(message: types.Message):
         f'*{event.name.upper()}*\n' +
         f'{time_ago(event["created"])}',
         parse_mode=ParseMode.MARKDOWN)
+    try:
+        await bot.send_photo(
+            message.chat.id,
+            events.picture(event.name)
+        )
+    except FileNotFoundError:
+        pass
 
 
 def time_ago(dt):
