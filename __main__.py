@@ -11,7 +11,7 @@ from gwevents import Events
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Initialize bot and dispatcher
+# Initialize telegrambot and dispatcher
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 events = Events()
@@ -23,8 +23,8 @@ async def send_welcome(message: types.Message):
     This handler will be called when client send `/start` or `/help` commands.
     """
     await message.reply(
-        "Get information on LIGO/Virgo gravitational wave events.\n"
-        "Use /latest to see the latest event.",
+        'Get information on LIGO/Virgo gravitational wave events.\n'
+        'Use /latest to see the latest event.',
         reply=False)
 
 
@@ -39,10 +39,12 @@ async def send_latest(message: types.Message):
         f'{time_ago(event["created"])}',
         parse_mode=ParseMode.MARKDOWN)
     try:
-        await bot.send_photo(
-            message.chat.id,
-            events.picture(event.name)
-        )
+        image_fname = events.picture(event.name)
+        with open(image_fname, 'rb') as picture:
+            await bot.send_photo(
+                message.chat.id,
+                picture
+            )
     except FileNotFoundError:
         pass
 
