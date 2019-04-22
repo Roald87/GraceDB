@@ -40,6 +40,62 @@ class Events(object):
 
         self.events = df
 
+        self._add_possible_event_types()
+
+    def _add_possible_event_types(self):
+        """
+        Adds the event type to the events dataframe.
+
+        Possible event types are binary black hole merger, black hole neutron
+        star merger etc.
+
+        Returns
+        -------
+        None
+        """
+
+        _all_types = pd.Series(name='event_types')
+        for event_name, _ in self.events.iterrows():
+            try:
+                event_type = self.client.files(event_name, 'p_astro.json').json()
+            except ligo.gracedb.exceptions.HTTPError:
+                pass
+            _all_types[event_name] = event_type
+
+        self.events = pd.concat([self.events, _all_types], axis=1)
+
+    def get_event_type(self, event_id: str) -> str:
+        """
+
+        Returns
+        -------
+
+        """
+        _event_types = {
+            # Probability that the source is a binary black hole merger (both
+            # objects heavier than 5 solar masses)
+            'BBH': 'binary black hole merger',
+            # Probability that the source is a binary neutron star merger
+            # (both objects lighter than 3 solar masses)
+            'BNS': 'binary neutron star merger',
+            # Probability that the source is a neutron star-black hole merger
+            # (primary heavier than 5 solar masses, secondary lighter than 3
+            # solar masses)
+            'NSBH': 'neutron start black hole merger',
+            # Probability that the source is terrestrial(i.e., a background
+            # noise fluctuation or a glitch)
+            'Terrestrial': 'terrestrial',
+            # Probability that the source has at least one object between 3 and
+            # 5 solar masses
+            'MassGap': 'mass gap',
+        }
+
+        event_types = self.events.loc[event_id, 'event_types']
+        most_likely, confidence = max(sorted(
+            event_types.items(), key=lambda value: value[1]))
+
+        return _event_types[most_likely], confidence
+
     def latest(self) -> pd.Series:
         """
         Return the latest event from the Grace database.
@@ -78,4 +134,6 @@ class Events(object):
             img_fname = img.reduce_whitespace()
 
         return img_fname
+
+
 

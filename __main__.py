@@ -32,11 +32,14 @@ async def send_welcome(message: types.Message):
 async def send_latest(message: types.Message):
 
     event = events.latest()
+    event_type, confidence = events.get_event_type(event.name)
+    confirmed = {'s': 'Unconfirmed', 'g': 'Confirmed'}
 
     await bot.send_message(
         message.chat.id,
         f'*{event.name.upper()}*\n' +
-        f'{time_ago(event["created"])}',
+        f'{time_ago(event["created"])}\n'
+        f'{confirmed[event.name[0].lower()]} {event_type} ({confidence:.2%}) event.',
         parse_mode=ParseMode.MARKDOWN)
     try:
         image_fname = events.picture(event.name)
