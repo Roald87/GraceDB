@@ -91,8 +91,8 @@ class Events(object):
         }
 
         event_types = self.events.loc[event_id, 'event_types']
-        most_likely, confidence = max(sorted(
-            event_types.items(), key=lambda value: value[1]))
+        most_likely, confidence = sorted(
+            event_types.items(), key=lambda value: value[1], reverse=True)[0]
 
         return _event_types[most_likely], confidence
 
