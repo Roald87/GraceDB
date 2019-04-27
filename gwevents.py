@@ -125,7 +125,12 @@ class Events(object):
             Local path of the cropped image.
         """
         files = self.client.files(event_id).json()
-        link = files.get('bayestar.png', None)
+        bayestar = {fname: link for fname, link in files.items()
+                    if ('bayestar' in fname)
+                    and fname[-4:] == '.png'
+                    and 'volume' not in fname}
+        latest_bayestar = sorted(bayestar.keys())[-1]
+        link = files.get(latest_bayestar, None)
 
         if link is None:
             raise FileNotFoundError
