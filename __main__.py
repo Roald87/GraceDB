@@ -38,7 +38,7 @@ async def send_latest(message: types.Message):
     await bot.send_message(
         message.chat.id,
         f'*{event.name.upper()}*\n' +
-        f'{time_ago(event["created"])}\n'
+        f'{time_ago(event["created"])}\n\n'
         f'{confirmed[event.name[0].lower()]} {event_type} ({confidence:.2%}) event.',
         parse_mode=ParseMode.MARKDOWN)
     try:
