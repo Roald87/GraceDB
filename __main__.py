@@ -1,51 +1,61 @@
 import datetime
-import logging
 
+import pytz
+import telepot
 import timeago
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import ParseMode
+from flask import Flask, request
 
-from config import API_TOKEN
+from config import API_TOKEN, secret
 from gwevents import Events
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-
 # Initialize telegrambot and dispatcher
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+bot = telepot.Bot(API_TOKEN)
+bot.setWebhook("https://Roald.pythonanywhere.com/{}".format(secret), max_connections=1)
 events = Events()
 
+app = Flask(__name__)
 
-@dp.message_handler(commands=['start', 'help'])
-async def send_welcome(message: types.Message):
+@app.route('/{}'.format(secret), methods=["POST"])
+def telegram_webhook():
+    update = request.get_json()
+    if "message" in update:
+        text = update["message"]["text"]
+        chat_id = update["message"]["chat"]["id"]
+        if '/start' in text or '/help' in text:
+            send_welcome(chat_id)
+        elif '/latest' in text:
+            send_latest(chat_id)
+
+    return "OK"
+
+
+def send_welcome(chat_id):
     """
     This handler will be called when client send `/start` or `/help` commands.
     """
-    await message.reply(
+    bot.sendMessage(
+        chat_id,
         'Get information on LIGO/Virgo gravitational wave events.\n'
-        'Use /latest to see the latest event.',
-        reply=False)
+        'Use /latest to see the latest event.')
 
 
-@dp.message_handler(commands=['latest'])
-async def send_latest(message: types.Message):
+def send_latest(chat_id):
 
     event = events.latest()
     event_type, confidence = events.get_event_type(event.name)
     confirmed = {'s': 'Unconfirmed', 'g': 'Confirmed'}
 
-    await bot.send_message(
-        message.chat.id,
-        f'*{event.name.upper()}*\n' +
+    bot.sendMessage(
+        chat_id,
+        f'*{event.name.upper()}*\n'
         f'{time_ago(event["created"])}\n\n'
         f'{confirmed[event.name[0].lower()]} {event_type} ({confidence:.2%}) event.',
-        parse_mode=ParseMode.MARKDOWN)
+        parse_mode='Markdown')
     try:
         image_fname = events.picture(event.name)
         with open(image_fname, 'rb') as picture:
-            await bot.send_photo(
-                message.chat.id,
+            bot.sendPhoto(
+                chat_id,
                 picture
             )
     except FileNotFoundError:
@@ -55,9 +65,4 @@ async def send_latest(message: types.Message):
 def time_ago(dt):
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
-    return timeago.format(dt.to_pydatetime(), current_date)
-
-
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
-
+    return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)

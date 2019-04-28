@@ -139,6 +139,3 @@ class Events(object):
             img_fname = img.reduce_whitespace()
 
         return img_fname
-
-
-
