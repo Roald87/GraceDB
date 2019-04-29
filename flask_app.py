@@ -1,19 +1,25 @@
 import datetime
+import os
 
 import pytz
 import telepot
 import timeago
 from flask import Flask, request
 
-from config import API_TOKEN, secret
+from config import API_TOKEN, remote, secret, tunnel
 from gwevents import Events
 
-# Initialize telegrambot and dispatcher
-bot = telepot.Bot(API_TOKEN)
-bot.setWebhook("https://Roald.pythonanywhere.com/{}".format(secret), max_connections=1)
-events = Events()
-
 app = Flask(__name__)
+bot = telepot.Bot(API_TOKEN)
+
+if os.environ['PYCHARM_HOSTED']:
+    secret = ''
+    webhook_url = tunnel
+else:
+    webhook_url = remote
+
+bot.setWebhook(webhook_url, max_connections=1)
+
 
 @app.route('/{}'.format(secret), methods=["POST"])
 def telegram_webhook():
@@ -38,6 +44,7 @@ def send_welcome(chat_id):
         'Get information on LIGO/Virgo gravitational wave events.\n'
         'Use /latest to see the latest event.')
 
+events = Events()
 
 def send_latest(chat_id):
 
@@ -66,3 +73,6 @@ def time_ago(dt):
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
     return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8088, debug=True)
