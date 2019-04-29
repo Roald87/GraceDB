@@ -12,7 +12,16 @@ from gwevents import Events
 app = Flask(__name__)
 bot = telepot.Bot(API_TOKEN)
 
-if os.environ['PYCHARM_HOSTED']:
+def is_running_locally():
+    running_locally = False
+    try:
+        running_locally = os.environ['PYCHARM_HOSTED']
+    except KeyError:
+        running_locally = False
+
+    return running_locally
+
+if is_running_locally():
     secret = ''
     webhook_url = tunnel
 else:
