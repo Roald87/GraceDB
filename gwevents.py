@@ -50,15 +50,15 @@ class Events(object):
         -------
         None
         """
-        _distance = pd.DataFrame(columns=['distance_Mly', 'sigma_Mly'])
-        for event_name, _ in self.events.iterrows():
-            try:
-                fit_data = self.client.files(event_name, 'p_astro.json').json()
-            except ligo.gracedb.exceptions.HTTPError:
-                pass
-            _all_types[event_name] = event_type
-
-        self.events = pd.concat([self.events, _all_types], axis=1)
+        # _distance = pd.DataFrame(columns=['distance_Mly', 'sigma_Mly'])
+        # for event_name, _ in self.events.iterrows():
+        #     try:
+        #         fit_data = self.client.files(event_name, 'p_astro.json').json()
+        #     except ligo.gracedb.exceptions.HTTPError:
+        #         pass
+        #     _all_types[event_name] = event_type
+        #
+        # self.events = pd.concat([self.events, _all_types], axis=1)
 
 
     def _add_possible_event_types(self):
@@ -144,7 +144,7 @@ class Events(object):
             Local path of the cropped image.
         """
         files = self.client.files(event_id).json()
-        link = get_latest_file_link(files, 'bayestar', '.png')
+        link = get_latest_file_url(files, 'bayestar', '.png')
 
         if link is None:
             raise FileNotFoundError
@@ -155,11 +155,28 @@ class Events(object):
         return img_fname
 
 
-def get_latest_file_link(files: dict, start: str, end: str) -> str:
+def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
+    """
+    Get the url to a file which should start and end with a specific string.
+
+    Parameters
+    ----------
+    files : dict
+        Keys are the filenames and the values are the urls.
+    starts_with : str
+        Start of the filename.
+    ends_with : str
+        End of the filename, usually the extension of the file.
+
+    Returns
+    -------
+    str
+        url of the most recent file.
+    """
     filtered_files = {fname: link for fname, link in files.items()
-                if (start in fname)
-                and fname[-4:] == end
-                and 'volume' not in fname}
+                      if (starts_with in fname[:len(starts_with)])
+                      and fname[-len(ends_with):] == ends_with
+                      and 'volume' not in fname}
     newest_file = sorted(filtered_files.keys())[-1]
     link = files.get(newest_file, None)
 
