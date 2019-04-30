@@ -42,6 +42,25 @@ class Events(object):
 
         self._add_possible_event_types()
 
+    def _add_event_distances(self):
+        """
+        Adds the event distances to the dataframe.
+
+        Returns
+        -------
+        None
+        """
+        _distance = pd.DataFrame(columns=['distance_Mly', 'sigma_Mly'])
+        for event_name, _ in self.events.iterrows():
+            try:
+                fit_data = self.client.files(event_name, 'p_astro.json').json()
+            except ligo.gracedb.exceptions.HTTPError:
+                pass
+            _all_types[event_name] = event_type
+
+        self.events = pd.concat([self.events, _all_types], axis=1)
+
+
     def _add_possible_event_types(self):
         """
         Adds the event type to the events dataframe.
@@ -125,12 +144,7 @@ class Events(object):
             Local path of the cropped image.
         """
         files = self.client.files(event_id).json()
-        bayestar = {fname: link for fname, link in files.items()
-                    if ('bayestar' in fname)
-                    and fname[-4:] == '.png'
-                    and 'volume' not in fname}
-        latest_bayestar = sorted(bayestar.keys())[-1]
-        link = files.get(latest_bayestar, None)
+        link = get_latest_file_link(files, 'bayestar', '.png')
 
         if link is None:
             raise FileNotFoundError
@@ -139,3 +153,14 @@ class Events(object):
             img_fname = img.reduce_whitespace()
 
         return img_fname
+
+
+def get_latest_file_link(files: dict, start: str, end: str) -> str:
+    filtered_files = {fname: link for fname, link in files.items()
+                if (start in fname)
+                and fname[-4:] == end
+                and 'volume' not in fname}
+    newest_file = sorted(filtered_files.keys())[-1]
+    link = files.get(newest_file, None)
+
+    return link
