@@ -1,5 +1,8 @@
 import datetime
 import os
+import threading
+import time
+import traceback
 
 import pytz
 import telepot
@@ -53,7 +56,42 @@ def send_welcome(chat_id):
         'Get information on LIGO/Virgo gravitational wave events.\n'
         'Use /latest to see the latest event.')
 
+
+def every(delay: int, task: object):
+    """
+    Repeat a task at an interval.
+
+    Parameters
+    ----------
+    delay : int
+        Calls the task with this interval in seconds.
+    task : object
+        The task which should be called.
+
+    Returns
+    -------
+    None
+
+    See Also
+    --------
+    https://stackoverflow.com/a/49801719/6329629
+    """
+    next_time = time.time() + delay
+    while True:
+        time.sleep(max(0, next_time - time.time()))
+        try:
+            task()
+            print("updating events")
+        except Exception:
+            traceback.print_exc()
+    # skip tasks if we are behind schedule:
+    next_time += (time.time() - next_time) // delay * delay + delay
+
+
 events = Events()
+hourly_event_updater = threading.Thread(target=lambda: every(3600, events.update_events))
+hourly_event_updater.start()
+
 
 def send_latest(chat_id):
 
