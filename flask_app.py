@@ -15,14 +15,17 @@ from gwevents import Events
 app = Flask(__name__)
 bot = telepot.Bot(API_TOKEN)
 
-def is_running_locally():
-    running_locally = False
-    try:
-        running_locally = os.environ['PYCHARM_HOSTED']
-    except KeyError:
-        running_locally = False
 
-    return running_locally
+def is_running_locally() -> bool:
+    """
+    Check if the code runs locally by checking if it runs in PyCharm.
+
+    Returns
+    -------
+    bool
+        True if code runs locally, otherwise False.
+    """
+    return bool(os.environ.get('PYCHARM_HOSTED', False))
 
 if is_running_locally():
     secret = ''
