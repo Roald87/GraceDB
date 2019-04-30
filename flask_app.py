@@ -47,9 +47,18 @@ def telegram_webhook():
     return "OK"
 
 
-def send_welcome(chat_id):
+def send_welcome(chat_id: int) -> None:
     """
-    This handler will be called when client send `/start` or `/help` commands.
+    Welcome and help message of the bot.
+
+    Parameters
+    ----------
+    chat_id : int
+        Chat to send the message to.
+
+    Returns
+    -------
+    None
     """
     bot.sendMessage(
         chat_id,
@@ -93,7 +102,18 @@ hourly_event_updater = threading.Thread(target=lambda: every(3600, events.update
 hourly_event_updater.start()
 
 
-def send_latest(chat_id):
+def send_latest(chat_id: int) -> None:
+    """
+    Send the latest event to the telegram bot.
+
+    Parameters
+    ----------
+    chat_id : int
+
+    Returns
+    -------
+    None
+    """
 
     event = events.latest()
     event_type, confidence = events.get_event_type(event.name)
@@ -116,7 +136,20 @@ def send_latest(chat_id):
         pass
 
 
-def time_ago(dt):
+def time_ago(dt: datetime.datetime) -> str:
+    """
+    How long ago a dt was, e.g. 1 hour ago, 2 days ago, 3 weeks ago.
+
+    Parameters
+    ----------
+    dt : datetime.datetime
+        Date to show how long ago it took place.
+
+    Returns
+    -------
+    str
+        How long ago dt was.
+    """
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
     return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
