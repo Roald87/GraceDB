@@ -119,6 +119,8 @@ def send_latest(chat_id: int) -> None:
     """
 
     event = events.latest()
+    distance_mean = round(event["distance_mean_Mly"])
+    distance_std = round(event["distance_std_Mly"])
     event_type, confidence = events.get_event_type(event.name)
     confirmed = {'s': 'Unconfirmed', 'g': 'Confirmed'}
 
@@ -126,7 +128,8 @@ def send_latest(chat_id: int) -> None:
         chat_id,
         f'*{event.name.upper()}*\n'
         f'{time_ago(event["created"])}\n\n'
-        f'{confirmed[event.name[0].lower()]} {event_type} ({confidence:.2%}) event.',
+        f'{confirmed[event.name[0].lower()]} {event_type} ({confidence:.2%}) event '
+        f'at {distance_mean} ± {distance_std} million light years.',
         parse_mode='Markdown')
     try:
         image_fname = events.picture(event.name)
