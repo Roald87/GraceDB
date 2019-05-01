@@ -1,5 +1,4 @@
 import datetime
-import os
 import threading
 import time
 import traceback
@@ -9,34 +8,15 @@ import telepot
 import timeago
 from flask import Flask, request
 
-from config import API_TOKEN, remote, secret, tunnel
+from config import API_TOKEN, get_secret, get_webhook_url
 from gwevents import Events
 
 app = Flask(__name__)
 bot = telepot.Bot(API_TOKEN)
 
+bot.setWebhook(get_webhook_url(), max_connections=1)
 
-def is_running_locally() -> bool:
-    """
-    Check if the code runs locally by checking if it runs in PyCharm.
-
-    Returns
-    -------
-    bool
-        True if code runs locally, otherwise False.
-    """
-    return bool(os.environ.get('PYCHARM_HOSTED', False))
-
-if is_running_locally():
-    secret = ''
-    webhook_url = tunnel
-else:
-    webhook_url = remote
-
-bot.setWebhook(webhook_url, max_connections=1)
-
-
-@app.route('/{}'.format(secret), methods=["POST"])
+@app.route('/{}'.format(get_secret()), methods=["POST"])
 def telegram_webhook():
     update = request.get_json()
     if "message" in update:
