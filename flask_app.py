@@ -1,15 +1,12 @@
-import datetime
 import threading
 import time
 import traceback
 
-import pytz
 import telepot
-import timeago
 from flask import Flask, request
 
 from config import API_TOKEN, get_secret, get_webhook_url
-from gwevents import Events
+from gwevents import Events, time_ago
 
 app = Flask(__name__)
 bot = telepot.Bot(API_TOKEN)
@@ -121,24 +118,6 @@ def send_latest(chat_id: int) -> None:
     except FileNotFoundError:
         pass
 
-
-def time_ago(dt: datetime.datetime) -> str:
-    """
-    How long ago a dt was, e.g. 1 hour ago, 2 days ago, 3 weeks ago.
-
-    Parameters
-    ----------
-    dt : datetime.datetime
-        Date to show how long ago it took place.
-
-    Returns
-    -------
-    str
-        How long ago dt was.
-    """
-    current_date = datetime.datetime.now(datetime.timezone.utc)
-
-    return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8088, debug=True)

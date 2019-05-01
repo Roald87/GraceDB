@@ -1,5 +1,9 @@
+import datetime
+
 import ligo.gracedb.rest
 import pandas as pd
+import pytz
+import timeago
 from astropy.io import fits
 
 from image import ImageFromUrl
@@ -66,7 +70,6 @@ class Events(object):
                         mpc_to_mly(fit_data[1].header['DISTSTD'])
             except ligo.gracedb.exceptions.HTTPError:
                 pass
-
 
     def _add_possible_event_types(self):
         """
@@ -204,3 +207,22 @@ def mpc_to_mly(num_in_mpc: float) -> float:
         Distance in million light years.
     """
     return num_in_mpc * 3.2637977445371
+
+
+def time_ago(dt: datetime.datetime) -> str:
+    """
+    How long ago a dt was, e.g. 1 hour ago, 2 days ago, 3 weeks ago.
+
+    Parameters
+    ----------
+    dt : datetime.datetime
+        Date to show how long ago it took place.
+
+    Returns
+    -------
+    str
+        How long ago dt was.
+    """
+    current_date = datetime.datetime.now(datetime.timezone.utc)
+
+    return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
