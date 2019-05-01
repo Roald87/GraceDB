@@ -1,5 +1,6 @@
 import ligo.gracedb.rest
 import pandas as pd
+from astropy.io import fits
 
 from image import ImageFromUrl
 
@@ -41,24 +42,30 @@ class Events(object):
         self.events = df
 
         self._add_possible_event_types()
+        self._add_event_distances()
 
     def _add_event_distances(self):
         """
-        Adds the event distances to the dataframe.
+        Adds the event distances to the event dataframe.
 
         Returns
         -------
         None
         """
-        # _distance = pd.DataFrame(columns=['distance_Mly', 'sigma_Mly'])
-        # for event_name, _ in self.events.iterrows():
-        #     try:
-        #         fit_data = self.client.files(event_name, 'p_astro.json').json()
-        #     except ligo.gracedb.exceptions.HTTPError:
-        #         pass
-        #     _all_types[event_name] = event_type
-        #
-        # self.events = pd.concat([self.events, _all_types], axis=1)
+        self.events = self.events.reindex(
+            columns=list(self.events) +['distance_mean_Mly', 'distance_std_Mly'])
+
+        for event_name, _ in self.events.iterrows():
+            filenames_with_url = self.client.files(event_name).json()
+            try:
+                fit_url = get_latest_file_url(filenames_with_url, 'bayestar', '.fits')
+                with fits.open(fit_url) as fit_data:
+                    self.events.at[event_name, 'distance_mean_Mly'] = \
+                        mpc_to_mly(fit_data[1].header['DISTMEAN'])
+                    self.events.at[event_name, 'distance_std_Mly'] = \
+                        mpc_to_mly(fit_data[1].header['DISTSTD'])
+            except ligo.gracedb.exceptions.HTTPError:
+                pass
 
 
     def _add_possible_event_types(self):
@@ -181,3 +188,19 @@ def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
     link = files.get(newest_file, None)
 
     return link
+
+def mpc_to_mly(num_in_mpc: float) -> float:
+    """
+    Convert a number from megaparsec to million light years.
+
+    Parameters
+    ----------
+    num_in_mpc : float
+        Distance in megaparsec to convert.
+
+    Returns
+    -------
+    float
+        Distance in million light years.
+    """
+    return num_in_mpc * 3.2637977445371
