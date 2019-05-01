@@ -33,7 +33,6 @@ class ImageFromUrl(object):
         Source
         ------
         https://stackoverflow.com/a/23489503/6329629
-
         """
         response = requests.get(url)
         img = Image.open(BytesIO(response.content))
@@ -57,8 +56,6 @@ class ImageFromUrl(object):
         Source
         ------
         https://stackoverflow.com/a/23489503/6329629
-
-
         """
         if self.img is None:
             raise FileExistsError("Load an image first with from_url.")
@@ -79,6 +76,7 @@ class ImageFromUrl(object):
 
 def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
     """
+    Add white space to an existing bounding box.
 
     Parameters
     ----------
