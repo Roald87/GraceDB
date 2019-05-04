@@ -16,9 +16,13 @@ def telegram_webhook():
             bot.send_welcome(chat_id)
         elif '/latest' in text:
             bot.send_latest(chat_id)
+        elif '/subscribe' in text:
+            bot.add_subscriber(chat_id)
+        elif '/unsubscribe' in text:
+            bot.remove_subscriber(chat_id)
 
     return "OK"
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8088, debug=True)
+    app.run(host='127.0.0.1', port=8089, debug=True)
