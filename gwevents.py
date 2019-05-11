@@ -88,6 +88,7 @@ class Events(object):
             try:
                 event_type = self.client.files(event_name, 'p_astro.json').json()
             except ligo.gracedb.exceptions.HTTPError:
+                event_type = None
                 pass
             _all_types[event_name] = event_type
 
