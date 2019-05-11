@@ -1,6 +1,7 @@
 from flask import Flask, request
+from gevent.pywsgi import WSGIServer
 
-from config import get_secret, is_running_locally, remote
+from config import get_secret, is_running_locally
 from gracebot import GraceBot
 
 app = Flask(__name__)
@@ -24,4 +25,5 @@ if __name__ == '__main__':
     if is_running_locally():
         app.run(host='127.0.0.1', port=8088, debug=True)
     else:
-        app.run(host=remote)
+        http_server = WSGIServer(('', 5000), app)
+        http_server.serve_forever()
