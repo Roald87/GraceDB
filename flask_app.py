@@ -1,6 +1,6 @@
 from flask import Flask, request
 
-from config import get_secret
+from config import get_secret, is_running_locally, remote
 from gracebot import GraceBot
 
 app = Flask(__name__)
@@ -21,4 +21,7 @@ def telegram_webhook():
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8088, debug=True)
+    if is_running_locally():
+        app.run(host='127.0.0.1', port=8088, debug=True)
+    else:
+        app.run(host=remote)
