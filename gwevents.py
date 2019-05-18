@@ -31,6 +31,7 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
+        print('Getting latest events.')
         events = self.client.superevents(query='Production', orderby=['-created'])
 
         df = pd.DataFrame()
