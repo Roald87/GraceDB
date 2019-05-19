@@ -5,14 +5,14 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, get_secret, get_webhook_url, is_running_locally, remote
+from config import API_TOKEN, get_host, get_port, get_secret, get_webhook_url
 
 # webhook settings
 WEBHOOK_URL = get_webhook_url()
 
 # webserver settings
-WEBAPP_HOST = 'localhost' if is_running_locally() else remote
-WEBAPP_PORT = 8088 if is_running_locally() else 443
+WEBAPP_HOST = get_host()
+WEBAPP_PORT = get_port()
 
 logging.basicConfig(level=logging.INFO)
 
