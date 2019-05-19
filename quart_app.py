@@ -5,7 +5,7 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, get_webhook_url, is_running_locally, remote
+from config import API_TOKEN, get_secret, get_webhook_url, is_running_locally, remote
 
 # webhook settings
 WEBHOOK_URL = get_webhook_url()
@@ -38,7 +38,7 @@ async def on_shutdown(dp):
 
 if __name__ == '__main__':
     start_webhook(
-        dispatcher=dp, webhook_path='',
+        dispatcher=dp, webhook_path=f'/{get_secret()}',
         on_startup=on_startup, on_shutdown=on_shutdown,
         skip_updates=True, host=WEBAPP_HOST, port=WEBAPP_PORT
     )
