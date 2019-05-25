@@ -45,8 +45,6 @@ class Events(object):
             # ADVNO = advocate says event is not ok.
             if 'ADVNO' not in labels:
                 df = df.append({**event, 'labels': [labels]}, ignore_index=True)
-            if i > 2:
-                break
         df.set_index('superevent_id', inplace=True)
         df['created'] = pd.to_datetime(df['created'])
 
