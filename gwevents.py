@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 
@@ -19,7 +20,9 @@ class Events(object):
     def __init__(self):
         self.client = ligo.gracedb.rest.GraceDb()
         self.events = pd.DataFrame()
-        self.update_events()
+        self.loop = asyncio.get_event_loop()
+        self.loop.create_task(self._periodic_event_updater())
+
 
     def update_events(self):
         """
@@ -103,6 +106,13 @@ class Events(object):
             _all_types[event_name] = event_type
 
         self.events = pd.concat([self.events, _all_types], axis=1)
+
+    async def _periodic_event_updater(self):
+        while True:
+            logging.info("Refreshing event database.")
+            self.update_events()
+
+            await asyncio.sleep(delay=60)
 
     def get_event_type(self, event_id: str) -> str:
         """

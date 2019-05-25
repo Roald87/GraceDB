@@ -1,7 +1,6 @@
-import asyncio
 import logging
 
-from aiogram import Bot, types
+from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
@@ -26,40 +25,27 @@ async def on_shutdown(dp):
     # insert code here to run it before shutdown
     pass
 
-async def periodic_update():
-    while True:
-        logging.info("Refreshing event database.")
-        grace.events.update_events()
 
-        await asyncio.sleep(delay=3600)
-
-loop = asyncio.get_event_loop()
-task = loop.create_task(periodic_update())
-bot = Bot(token=API_TOKEN, loop=loop)
+bot = GraceBot(token=API_TOKEN)
 dp = Dispatcher(bot)
-grace = GraceBot()
 
-#
-# try:
-#     loop.run_until_complete(task)
-# except asyncio.CancelledError:
-#     pass
 
 @dp.message_handler(commands=['start', 'help'])
 async def echo(message: types.Message):
-    await bot.send_message(message.chat.id, grace.welcome_message)
+    await bot.send_message(message.chat.id, bot.welcome_message)
+
 
 @dp.message_handler(commands=['latest'])
 async def echo(message: types.Message):
-    await bot.send_message(message.chat.id, grace.latest_message, parse_mode='markdown')
+    await bot.send_message(message.chat.id, bot.latest_message, parse_mode='markdown')
 
-    with open(grace.latest_image(), 'rb') as picture:
+    with open(bot.latest_image(), 'rb') as picture:
         await bot.send_photo(message.chat.id, picture)
 
 
 if __name__ == '__main__':
     start_webhook(
-        dispatcher=dp, webhook_path=f'/{secret}', loop=loop,
+        dispatcher=dp, webhook_path=f'/{secret}',
         on_startup=on_startup, on_shutdown=on_shutdown,
         skip_updates=True, host=WEBAPP_HOST, port=WEBAPP_PORT
     )

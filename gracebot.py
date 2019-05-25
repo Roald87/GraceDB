@@ -1,14 +1,12 @@
-import time
-import traceback
-
-import gevent
+from aiogram import Bot
 
 from gwevents import Events, time_ago
 
 
-class GraceBot(object):
+class GraceBot(Bot):
 
-    def __init__(self):
+    def __init__(self, token):
+        super(GraceBot, self).__init__(token=token)
         self.events = Events()
 
 
@@ -60,61 +58,10 @@ class GraceBot(object):
         return message
 
 
+
     def latest_image(self) -> str:
         event = self.events.latest()
         try:
             return self.events.picture(event.name)
         except FileNotFoundError:
             return None
-
-
-def run_regularly(function, interval, *args, **kwargs):
-    '''
-
-    Parameters
-    ----------
-    function
-    interval
-    args
-    kwargs
-
-    Returns
-    -------
-
-    See Also
-    --------
-    https://stackoverflow.com/a/26549002/6329629
-    '''
-    while True:
-        gevent.sleep(interval)
-        function(*args, **kwargs)
-
-def every(delay: int, task: object):
-    """
-    Repeat a task at an interval.
-
-    Parameters
-    ----------
-    delay : int
-        Calls the task with this interval in seconds.
-    task : object
-        The task which should be called.
-
-    Returns
-    -------
-    None
-
-    See Also
-    --------
-    https://stackoverflow.com/a/49801719/6329629
-    """
-    next_time = time.time() + delay
-    while True:
-        time.sleep(max(0, next_time - time.time()))
-        try:
-            task()
-            print("updating events")
-        except Exception:
-            traceback.print_exc()
-    # skip tasks if we are behind schedule:
-    next_time += (time.time() - next_time) // delay * delay + delay
