@@ -13,8 +13,8 @@ class GraceBot(object):
     def __init__(self):
         self.bot = telepot.Bot(API_TOKEN)
         self.bot.setWebhook(get_webhook_url(), max_connections=1)
-        self.events = Events()
-        run_regularly(self.events.update_events(), 10)
+        #self.events = Events()
+        #run_regularly(self.events.update_events(), 10)
 
     def send_welcome(self, chat_id: int) -> None:
         """
