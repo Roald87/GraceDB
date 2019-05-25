@@ -21,15 +21,16 @@ loop = asyncio.get_event_loop()
 bot = Bot(token=API_TOKEN, loop=loop)
 dp = Dispatcher(bot)
 
-
-@dp.message_handler()
+@dp.message_handler(commands=['start', 'help'])
 async def echo(message: types.Message):
-    await bot.send_message(message.chat.id, message.text)
+    await bot.send_message(
+        message.chat.id,
+        'Get information on LIGO/Virgo gravitational wave events.\n'
+        'Use /latest to see the latest event.')
 
 
 async def on_startup(dp):
     await bot.set_webhook(WEBHOOK_URL)
-    # insert code here to run it after start
 
 
 async def on_shutdown(dp):
