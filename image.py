@@ -142,9 +142,9 @@ def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
     return larger_box
 
 
-def create_dir(dir):
-    if not os.path.exists(dir):
+def create_dir(directory):
+    if not os.path.exists(directory):
         try:
-            os.makedirs(dir)
+            os.makedirs(directory)
         except OSError:
-            logging.error(f"Creation of the directory {dir} failed")
+            logging.error(f"Creation of the directory {directory} failed")

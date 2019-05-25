@@ -112,7 +112,7 @@ class Events(object):
             logging.info("Refreshing event database.")
             self.update_events()
 
-            await asyncio.sleep(delay=60)
+            await asyncio.sleep(delay=3600)
 
     def get_event_type(self, event_id: str) -> str:
         """
