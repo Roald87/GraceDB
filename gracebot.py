@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import Bot
 
 from gwevents import Events, time_ago
@@ -9,14 +11,12 @@ class GraceBot(Bot):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
 
-
     async def send_welcome_message(self, message):
         text = (
             'Get information on LIGO/Virgo gravitational wave events.\n'
             'Use /latest to see the latest event.')
 
         await self.send_message(message.chat.id, text)
-
 
     async def send_latest(self, message):
         event = self.events.latest()
@@ -42,4 +42,5 @@ class GraceBot(Bot):
             with open(self.events.picture(event.name), 'rb') as picture:
                 await self.send_photo(message.chat.id, picture)
         except FileNotFoundError:
+            logging.error("Couldn't find the event image")
             return None

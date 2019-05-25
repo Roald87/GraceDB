@@ -181,9 +181,8 @@ class Events(object):
             raise FileNotFoundError
         else:
             img = ImageFromUrl(link)
-            img_fname = img.reduce_whitespace()
 
-        return img_fname
+        return img.path
 
 
 def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:

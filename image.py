@@ -1,3 +1,5 @@
+import logging
+import os
 from io import BytesIO
 from typing import List
 
@@ -13,8 +15,49 @@ class ImageFromUrl(object):
     Get an image from an URL and optionally crop it.
     """
 
-    def __init__(self, url: str):
-        self.img = self.from_url(url)
+    def __init__(self, url: str, border: int = 5):
+        self.url = url.split('/')
+        self.event_id = self.url[-3]
+        self.filename = self.make_valid_filename(self.url[-1])
+
+        self.dir = f'./img/{self.event_id}'
+        create_dir(self.dir)
+
+        self._path = f'{self.dir}/{self.filename}'
+        if not os.path.isfile(self._path):
+            logging.info(f"Getting event image, because no image was found at {self._path}.")
+            self.img = self.from_url(url)
+            self.reduce_whitespace(border)
+            self.img.save(self.path)
+        else:
+            logging.info(f"Serving image from {self._path}")
+
+    @property
+    def path(self):
+        return self._path
+
+    def make_valid_filename(self, fname: str):
+        """
+        Return valid filename for image.
+
+        If there are multiple files in the database they append it with
+        ',{number}'. This method will put the `number` between the filename
+        and the extension.
+
+        Parameters
+        ----------
+        fname
+
+        Returns
+        -------
+
+        """
+        if ',' in fname:
+            _fname, _i = fname.split(',')
+            _name, _extension = _fname.split('.')
+            return _name + _i + '.' + _extension
+        else:
+            return fname
 
     def from_url(self, url: str) -> Image:
         """
@@ -39,7 +82,7 @@ class ImageFromUrl(object):
 
         return img
 
-    def reduce_whitespace(self, border: int = 5) -> str:
+    def reduce_whitespace(self, border: int = 5):
         """
         Reduce the amount of whitespace around an image.
 
@@ -51,7 +94,7 @@ class ImageFromUrl(object):
 
         Returns
         -------
-        Local filename of the cropped image.
+        None
 
         Source
         ------
@@ -67,11 +110,7 @@ class ImageFromUrl(object):
         bbox = list(map(min, idx))[::-1] + list(map(max, idx))[::-1]
         larger_box = add_whitespace(bbox, border)
 
-        region = self.img.crop(larger_box)
-        image_fname = 'cropped_image.png'
-        region.save(image_fname)
-
-        return image_fname
+        self.img = self.img.crop(larger_box)
 
 
 def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
@@ -101,3 +140,11 @@ def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
             larger_box.append(corner + border)
 
     return larger_box
+
+
+def create_dir(dir):
+    if not os.path.exists(dir):
+        try:
+            os.makedirs(dir)
+        except OSError:
+            logging.error(f"Creation of the directory {dir} failed")
