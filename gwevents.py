@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import ligo.gracedb.rest
 import pandas as pd
@@ -6,6 +7,7 @@ import pytz
 import timeago
 from astropy.io import fits
 
+from functions import progress_bar
 from image import ImageFromUrl
 
 
@@ -31,15 +33,18 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
+        logging.info("Getting the latest events.")
         events = self.client.superevents(query='Production', orderby=['-created'])
 
         df = pd.DataFrame()
-        for event in events:
+        for i, event in enumerate(events, 1):
             event.pop('links')
             labels = event.pop('labels')
             # ADVNO = advocate says event is not ok.
             if 'ADVNO' not in labels:
                 df = df.append({**event, 'labels': [labels]}, ignore_index=True)
+            if i > 2:
+                break
         df.set_index('superevent_id', inplace=True)
         df['created'] = pd.to_datetime(df['created'])
 
@@ -56,10 +61,13 @@ class Events(object):
         -------
         None
         """
+        logging.info("Getting event distances.")
         self.events = self.events.reindex(
             columns=list(self.events) +['distance_mean_Mly', 'distance_std_Mly'])
 
-        for event_name, _ in self.events.iterrows():
+        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
+            progress_bar(i, len(self.events), "Event distances")
+
             filenames_with_url = self.client.files(event_name).json()
             try:
                 fit_url = get_latest_file_url(filenames_with_url, 'bayestar', '.fits')
@@ -70,6 +78,7 @@ class Events(object):
                         mpc_to_mly(fit_data[1].header['DISTSTD'])
             except ligo.gracedb.exceptions.HTTPError:
                 pass
+
 
     def _add_possible_event_types(self):
         """
@@ -82,12 +91,14 @@ class Events(object):
         -------
         None
         """
-
+        logging.info("Getting possible event types.")
         _all_types = pd.Series(name='event_types')
-        for event_name, _ in self.events.iterrows():
+        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
+            progress_bar(i, len(self.events), "Event types")
             try:
                 event_type = self.client.files(event_name, 'p_astro.json').json()
             except ligo.gracedb.exceptions.HTTPError:
+                event_type = None
                 pass
             _all_types[event_name] = event_type
 
