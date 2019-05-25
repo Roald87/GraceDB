@@ -24,13 +24,13 @@ async def echo(message: types.Message):
     await bot.send_latest(message)
 
 
-async def on_startup(dp):
+async def on_startup():
     webhook_url = f'{get_ngrok_url()}/{secret}'
 
     await bot.set_webhook(webhook_url)
 
 
-async def on_shutdown(dp):
+async def on_shutdown():
     # insert code here to run it before shutdown
     pass
 

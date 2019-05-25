@@ -1,18 +1,19 @@
 import json
+import logging
 
 import requests
 
 _url = "http://localhost:4040/api/tunnels/"
 
 
-def _get_ngrok() -> str:
+def _get_ngrok_tunnel() -> str:
     """
-    Return the https url of the ngrok tunnel or None if no tunnel is set up.
+    Return the details of the ngrok tunnel or None if no tunnel is set up.
 
     Returns
     -------
     str
-        Url of ngrok tunnel.
+        Details of ngrok tunnel.
 
     Source
     ------
@@ -21,25 +22,41 @@ def _get_ngrok() -> str:
     try:
         res = requests.get(_url)
     except requests.exceptions.ConnectionError:
-        print('Make sure ngrok is running.')
+        logging.warning("Can't find ngrok tunnel. Make sure it's running.")
         return None
 
-    res_unicode = res.content.decode("utf-8")
+    res_unicode = res.content.decode('utf-8')
     res_json = json.loads(res_unicode)
 
-    for i in res_json["tunnels"]:
-        if i['name'] == 'command_line':
-            return i
+    for tunnel in res_json['tunnels']:
+        if tunnel['name'] == 'command_line':
+            return tunnel
 
 
 def get_ngrok_url():
-    res_json = _get_ngrok()
+    """
+    Return the https URL of the ngrok tunnel.
 
-    return res_json['public_url']
+    Returns
+    -------
+    str
+        URL of ngrok tunnel.
+    """
+    tunnel = _get_ngrok_tunnel()
+
+    return tunnel['public_url']
 
 def get_port():
-    res_json = _get_ngrok()
-    local_address = res_json['config']['addr']
+    """
+    Return the port of the ngrok tunnel.
+
+    Returns
+    -------
+    int
+        Port number of the ngrok tunnel.
+    """
+    tunnel = _get_ngrok_tunnel()
+    local_address = tunnel['config']['addr']
     port = int(local_address.split(':')[-1])
 
     return port

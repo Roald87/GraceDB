@@ -14,7 +14,7 @@ from image import ImageFromUrl
 
 class Events(object):
     """
-    Holds a pandas DataFrame with all super events from the Grace database.
+    Holds a pandas DataFrame with all superevents from the Grace database.
     """
 
     def __init__(self):
@@ -22,7 +22,6 @@ class Events(object):
         self.events = pd.DataFrame()
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
-
 
     def update_events(self):
         """
@@ -58,7 +57,7 @@ class Events(object):
 
     def _add_event_distances(self):
         """
-        Adds the event distances to the event dataframe.
+        Adds the event distances to the event data frame.
 
         Returns
         -------
@@ -66,7 +65,7 @@ class Events(object):
         """
         logging.info("Getting event distances.")
         self.events = self.events.reindex(
-            columns=list(self.events) +['distance_mean_Mly', 'distance_std_Mly'])
+            columns=list(self.events) + ['distance_mean_Mly', 'distance_std_Mly'])
 
         for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
             progress_bar(i, len(self.events), "Event distances")
@@ -82,10 +81,9 @@ class Events(object):
             except ligo.gracedb.exceptions.HTTPError:
                 pass
 
-
     def _add_possible_event_types(self):
         """
-        Adds the event type to the events dataframe.
+        Adds the event type to the events data frame.
 
         Possible event types are binary black hole merger, black hole neutron
         star merger etc.
@@ -108,18 +106,33 @@ class Events(object):
         self.events = pd.concat([self.events, _all_types], axis=1)
 
     async def _periodic_event_updater(self):
+        """
+        Fetches all the events from the GraceDB database.
+
+        Returns
+        -------
+        None
+
+        """
         while True:
             logging.info("Refreshing event database.")
             self.update_events()
 
             await asyncio.sleep(delay=3600)
 
-    def get_event_type(self, event_id: str) -> str:
+    def get_likely_event_type(self, event_id: str) -> tuple:
         """
+        Return the most likely event type of a certain even.
+
+        Parameters
+        ----------
+        event_id : str
+            The event ID you want to know the event type of.
 
         Returns
         -------
-
+        tuple
+            Containing the event type and the likelihood of that event.
         """
         _event_types = {
             # Probability that the source is a binary black hole merger (both
@@ -172,7 +185,7 @@ class Events(object):
         Returns
         -------
         str
-            Local path of the cropped image.
+            Local path of the image.
         """
         files = self.client.files(event_id).json()
         link = get_latest_file_url(files, 'bayestar', '.png')
@@ -196,12 +209,12 @@ def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
     starts_with : str
         Start of the filename.
     ends_with : str
-        End of the filename, usually the extension of the file.
+        End of the filename. For example the file extension.
 
     Returns
     -------
     str
-        url of the most recent file.
+        URL of the most recent file.
     """
     filtered_files = {fname: link for fname, link in files.items()
                       if (starts_with in fname[:len(starts_with)])
@@ -211,6 +224,7 @@ def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
     link = files.get(newest_file, None)
 
     return link
+
 
 def mpc_to_mly(num_in_mpc: float) -> float:
     """
@@ -231,17 +245,17 @@ def mpc_to_mly(num_in_mpc: float) -> float:
 
 def time_ago(dt: datetime.datetime) -> str:
     """
-    How long ago a dt was, e.g. 1 hour ago, 2 days ago, 3 weeks ago.
+    When a datetime took place, e.g. 1 hour ago, 2 days ago, in 3 weeks.
 
     Parameters
     ----------
     dt : datetime.datetime
-        Date to show how long ago it took place.
+        Date to show how when it took place.
 
     Returns
     -------
     str
-        How long ago dt was.
+        When the datetime will occur or occurred.
     """
     current_date = datetime.datetime.now(datetime.timezone.utc)
 

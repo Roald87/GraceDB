@@ -18,7 +18,7 @@ class ImageFromUrl(object):
     def __init__(self, url: str, border: int = 5):
         self.url = url.split('/')
         self.event_id = self.url[-3]
-        self.filename = self.make_valid_filename(self.url[-1])
+        self.filename = self.get_filename()
 
         self.dir = f'./img/{self.event_id}'
         create_dir(self.dir)
@@ -26,7 +26,7 @@ class ImageFromUrl(object):
         self._path = f'{self.dir}/{self.filename}'
         if not os.path.isfile(self._path):
             logging.info(f"Getting event image, because no image was found at {self._path}.")
-            self.img = self.from_url(url)
+            self.img = self.from_url()
             self.reduce_whitespace(border)
             self.img.save(self.path)
         else:
@@ -36,22 +36,21 @@ class ImageFromUrl(object):
     def path(self):
         return self._path
 
-    def make_valid_filename(self, fname: str):
+    def get_filename(self) -> str:
         """
         Return valid filename for image.
 
         If there are multiple files in the database they append it with
-        ',{number}'. This method will put the `number` between the filename
-        and the extension.
-
-        Parameters
-        ----------
-        fname
+        ',{number}'. For example image.png,0. This method will put the `number`
+        between the filename and the extension. Thus 'image.png,0' becomes
+        'image0.png'.
 
         Returns
         -------
-
+        str
+            Converted filename.
         """
+        fname = self.url[-1]
         if ',' in fname:
             _fname, _i = fname.split(',')
             _name, _extension = _fname.split('.')
@@ -59,14 +58,9 @@ class ImageFromUrl(object):
         else:
             return fname
 
-    def from_url(self, url: str) -> Image:
+    def from_url(self) -> Image:
         """
         Loads image from url.
-
-        Parameters
-        ----------
-        url : str
-            URL of the image.
 
         Returns
         -------
@@ -77,7 +71,7 @@ class ImageFromUrl(object):
         ------
         https://stackoverflow.com/a/23489503/6329629
         """
-        response = requests.get(url)
+        response = requests.get(self.url)
         img = Image.open(BytesIO(response.content))
 
         return img
@@ -128,7 +122,6 @@ def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
     Returns
     -------
     Bounding box with increased whitespace.
-
     """
     assert len(bounding_box) == 4, "Bounding box can only have 4 corners"
 
