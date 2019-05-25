@@ -40,6 +40,10 @@ async def echo(message: types.Message):
 async def echo(message: types.Message):
     await bot.send_message(message.chat.id, grace.latest_message, parse_mode='markdown')
 
+    with open(grace.latest_image(), 'rb') as picture:
+        await bot.send_photo(message.chat.id, picture)
+
+
 if __name__ == '__main__':
     start_webhook(
         dispatcher=dp, webhook_path=f'/{secret}',

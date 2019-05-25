@@ -51,23 +51,22 @@ class GraceBot(object):
             confirmation_state = confirmation_states[event.name[0].lower()]
             message +=  f'{confirmation_state} {event_type} ({confidence:.2%}) event.'
 
-            distance_mean = round(event["distance_mean_Mly"])
-            distance_std = round(event["distance_std_Mly"])
-            message = message[:-1] + f' at {distance_mean} ± {distance_std} million light years.'
+            distance_mean = round(event["distance_mean_Mly"]/1000, 2)
+            distance_std = round(event["distance_std_Mly"]/1000, 2)
+            message = message[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
         except KeyError:
             pass
 
         return message
 
-        # try:
-        #     image_fname = self.events.picture(event.name)
-        #     with open(image_fname, 'rb') as picture:
-        #         self.bot.sendPhoto(
-        #             chat_id,
-        #             picture
-        #         )
-        # except FileNotFoundError:
-        #     pass
+
+    def latest_image(self) -> str:
+        event = self.events.latest()
+        try:
+            return self.events.picture(event.name)
+        except FileNotFoundError:
+            return None
+
 
 def run_regularly(function, interval, *args, **kwargs):
     '''
