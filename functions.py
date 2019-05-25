@@ -1,16 +1,22 @@
 import sys
 
-def progress_bar(count, total, suffix=''):
+
+def progress_bar(count: int, total: int, prefix: str = '') -> None:
     """
+    Display a progress bar in the terminal.
 
     Parameters
     ----------
-    count
-    total
-    suffix
+    count : int
+        Should run from 0 or 1 to `total`.
+    total : int
+        Total number of counts which represent 100%.
+    prefix : str
+        Optional text which is placed left of the progress bar.
 
     Returns
     -------
+    None.
 
     Source
     ------
@@ -23,7 +29,5 @@ def progress_bar(count, total, suffix=''):
     percents = round(100.0 * count / float(total))
     bar = '=' * filled_len + ' ' * (bar_len - filled_len)
 
-    sys.stdout.write(f'\r{suffix}: [{bar}] {percents}%')
-    if total - count < 1:
-        sys.stdout.write('\n')
-    sys.stdout.flush()  # As suggested by Rom Ruben
+    sys.stdout.write(f'\r{prefix}: [{bar}] {percents}%')
+    sys.stdout.flush()
