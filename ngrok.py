@@ -12,7 +12,7 @@ def _get_ngrok() -> str:
     Returns
     -------
     str
-        Url of ngrok tunnel
+        Url of ngrok tunnel.
 
     Source
     ------
@@ -27,21 +27,19 @@ def _get_ngrok() -> str:
     res_unicode = res.content.decode("utf-8")
     res_json = json.loads(res_unicode)
 
-    return res_json
+    for i in res_json["tunnels"]:
+        if i['name'] == 'command_line':
+            return i
 
 
 def get_ngrok_url():
     res_json = _get_ngrok()
 
-    for i in res_json["tunnels"]:
-        if i['name'] == 'command_line':
-            return i['public_url']
+    return res_json['public_url']
 
 def get_port():
     res_json = _get_ngrok()
+    local_address = res_json['config']['addr']
+    port = int(local_address.split(':')[-1])
 
-    for i in res_json["tunnels"]:
-        if i['name'] == 'command_line':
-            local_address = i['config']['addr']
-            port = int(local_address.split(':')[-1])
-            return port
+    return port
