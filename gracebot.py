@@ -10,36 +10,17 @@ class GraceBot(Bot):
         self.events = Events()
 
 
-    @property
-    def welcome_message(self) -> str:
-        """
-        Welcome and help message of the bot.
-
-        Parameters
-        ----------
-        chat_id : int
-            Chat to send the message to.
-
-        Returns
-        -------
-        None
-        """
-        return (
+    async def send_welcome_message(self, message):
+        text = (
             'Get information on LIGO/Virgo gravitational wave events.\n'
             'Use /latest to see the latest event.')
 
-    @property
-    def latest_message(self) -> str:
-        """
-        Return message with info of the latest event.
+        await self.send_message(message.chat.id, text)
 
-        Returns
-        -------
-        None
-        """
 
+    async def send_latest(self, message):
         event = self.events.latest()
-        message = (
+        text = (
             f'*{event.name.upper()}*\n'
             f'{time_ago(event["created"])}\n\n')
 
@@ -47,21 +28,18 @@ class GraceBot(Bot):
             event_type, confidence = self.events.get_event_type(event.name)
             confirmation_states = {'s': 'Unconfirmed', 'g': 'Confirmed'}
             confirmation_state = confirmation_states[event.name[0].lower()]
-            message +=  f'{confirmation_state} {event_type} ({confidence:.2%}) event.'
+            text += f'{confirmation_state} {event_type} ({confidence:.2%}) event.'
 
-            distance_mean = round(event["distance_mean_Mly"]/1000, 2)
-            distance_std = round(event["distance_std_Mly"]/1000, 2)
-            message = message[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
+            distance_mean = round(event["distance_mean_Mly"] / 1000, 2)
+            distance_std = round(event["distance_std_Mly"] / 1000, 2)
+            text = text[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
         except KeyError:
             pass
 
-        return message
+        await self.send_message(message.chat.id, text, parse_mode='markdown')
 
-
-
-    def latest_image(self) -> str:
-        event = self.events.latest()
         try:
-            return self.events.picture(event.name)
+            with open(self.events.picture(event.name), 'rb') as picture:
+                await self.send_photo(message.chat.id, picture)
         except FileNotFoundError:
             return None
