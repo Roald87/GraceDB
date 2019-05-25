@@ -18,11 +18,6 @@ WEBAPP_PORT = get_port()
 
 logging.basicConfig(level=logging.INFO)
 
-loop = asyncio.get_event_loop()
-bot = Bot(token=API_TOKEN, loop=loop)
-dp = Dispatcher(bot)
-grace = GraceBot()
-
 async def on_startup(dp):
     await bot.set_webhook(WEBHOOK_URL)
 
@@ -31,6 +26,24 @@ async def on_shutdown(dp):
     # insert code here to run it before shutdown
     pass
 
+async def periodic_update():
+    while True:
+        logging.info("Refreshing event database.")
+        grace.events.update_events()
+
+        await asyncio.sleep(delay=3600)
+
+loop = asyncio.get_event_loop()
+task = loop.create_task(periodic_update())
+bot = Bot(token=API_TOKEN, loop=loop)
+dp = Dispatcher(bot)
+grace = GraceBot()
+
+#
+# try:
+#     loop.run_until_complete(task)
+# except asyncio.CancelledError:
+#     pass
 
 @dp.message_handler(commands=['start', 'help'])
 async def echo(message: types.Message):
@@ -46,7 +59,7 @@ async def echo(message: types.Message):
 
 if __name__ == '__main__':
     start_webhook(
-        dispatcher=dp, webhook_path=f'/{secret}',
+        dispatcher=dp, webhook_path=f'/{secret}', loop=loop,
         on_startup=on_startup, on_shutdown=on_shutdown,
         skip_updates=True, host=WEBAPP_HOST, port=WEBAPP_PORT
     )
