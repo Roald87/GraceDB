@@ -196,9 +196,9 @@ class Events(object):
         return img.path
 
 
-def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
+def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> str:
     """
-    Get the url to a file which should start and end with a specific string.
+    Get the url to a file which should start and have a specific file extension.
 
     Parameters
     ----------
@@ -206,7 +206,7 @@ def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
         Keys are the filenames and the values are the urls.
     starts_with : str
         Start of the filename.
-    ends_with : str
+    file_extension : str
         End of the filename. For example the file extension.
 
     Returns
@@ -216,7 +216,7 @@ def get_latest_file_url(files: dict, starts_with: str, ends_with: str) -> str:
     """
     filtered_files = {fname: link for fname, link in files.items()
                       if (starts_with in fname[:len(starts_with)])
-                      and fname[-len(ends_with):] == ends_with
+                      and file_extension in fname
                       and 'volume' not in fname}
     newest_file = sorted(filtered_files.keys())[-1]
     link = files.get(newest_file, None)
