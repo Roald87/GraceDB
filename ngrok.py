@@ -29,7 +29,7 @@ def _get_ngrok_tunnel() -> str:
     res_json = json.loads(res_unicode)
 
     for tunnel in res_json['tunnels']:
-        if tunnel['name'] == 'command_line':
+        if 'ngrok' in tunnel['public_url']:
             return tunnel
 
 
