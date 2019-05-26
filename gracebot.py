@@ -44,7 +44,7 @@ class GraceBot(Bot):
         None.
         """
         text = (
-            'Get information on LIGO/Virgo gravitational wave events.\n'
+            'Get information on LIGO/Virgo gravitational wave events.\n\n'
             'Use /latest to see the latest event, or see an overview of all '
             'O3 events with /stats.')
 
@@ -108,21 +108,22 @@ class GraceBot(Bot):
             if _id and _type])
 
         confirmed_BBH = event_counter['GBBH']
-        possible_BBH = event_counter['SBBH']
+        unconfirmed_BBH = event_counter['SBBH']
         confirmed_BNS = event_counter['GBNS']
-        possible_BNS = event_counter['SBNS']
+        unconfirmed_BNS = event_counter['SBNS']
         confirmed_NSBH = event_counter['GNSBH']
-        possible_NSBH = event_counter['SNSBH']
-        terrestrial = event_counter['Sterrestrial']
+        unconfirmed_NSBH = event_counter['SNSBH']
+        terrestrial = event_counter['STerrestrial']
 
         text = (
-            f"Observational run 3 has detected {len(self.events.events)} "
-            "events since April 1st 2019. (confirmed/most likely)\n\n"
-            
-            f"Binary black hole mergers: {confirmed_BBH}/{possible_BBH}.\n"
-            f"Binary neutron star merger: {confirmed_BNS}/{possible_BNS}.\n"
-            f"Neutron star black hole merger: {confirmed_NSBH}/{possible_NSBH}.\n"
+            f"Observational run 3 has detected *{len(self.events.events)}* "
+            "events since April 1st 2019.\n\n"
+            ""
+            "Event types (confirmed/unconfirmed)\n"
+            f"Binary black hole mergers: {confirmed_BBH}/{unconfirmed_BBH}.\n"
+            f"Binary neutron star mergers: {confirmed_BNS}/{unconfirmed_BNS}.\n"
+            f"Neutron star black hole mergers: {confirmed_NSBH}/{unconfirmed_NSBH}.\n"
             f"Likely terrestrial: {terrestrial}.\n"
         )
 
-        await self.send_message(message.chat.id, text)
+        await self.send_message(message.chat.id, text, parse_mode='markdown')

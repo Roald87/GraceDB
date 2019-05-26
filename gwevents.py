@@ -1,12 +1,14 @@
 import asyncio
 import datetime
 import logging
+from xml.etree import ElementTree
 
-import ligo.gracedb.rest
+import ligo
 import pandas as pd
 import pytz
 import timeago
 from astropy.io import fits
+from ligo.gracedb.rest import GraceDb
 
 from functions import progress_bar
 from image import ImageFromUrl
@@ -18,7 +20,7 @@ class Events(object):
     """
 
     def __init__(self):
-        self.client = ligo.gracedb.rest.GraceDb()
+        self.client = GraceDb()
         self.events = pd.DataFrame()
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
@@ -91,7 +93,6 @@ class Events(object):
         logging.info("Getting most likely event types.")
         _most_likely = pd.Series(name='most_likely')
         for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
-            progress_bar(i, len(self.events), "Most likely types")
             _most_likely[event_name], _ = self.get_likely_event_type(event_name)
 
         self.events = pd.concat([self.events, _most_likely], axis=1)
@@ -112,10 +113,8 @@ class Events(object):
         for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
             progress_bar(i, len(self.events), "Event types")
 
-            filenames_with_url = self.client.files(event_name).json()
             try:
-                file_url = get_latest_file_url(filenames_with_url, 'p_astro', '.json')
-                event_type = self.client.files(event_name, file_url.split('/')[-1]).json()
+                event_type = self._pastro_from_vo_event(event_name)
             except ligo.gracedb.exceptions.HTTPError:
                 logging.error(f"Failed to get event types of {event_name}")
                 event_type = None
@@ -123,6 +122,40 @@ class Events(object):
             _all_types[event_name] = event_type
 
         self.events = pd.concat([self.events, _all_types], axis=1)
+
+    def _pastro_from_vo_event(self, event_id: str) -> dict:
+        """
+        Return event types from VOEvent xml which are also stored in `p_astro.json`.
+
+        For event 'S190510g' the latest `p_astro.json` didn't match with the
+        VOEvent xml file. The xml file contained more recent numbers. Therefore I
+        made this method.
+
+        Parameters
+        ----------
+        event_id : str
+            The super event you want to get the event classification of.
+
+        Returns
+        -------
+        dict
+            Containing the same info as the `p_astro.json`.
+        """
+        files = self.client.files(event_id).json()
+
+        voevents = list(filter(lambda x: (event_id in x) and (x[-4:] == '.xml'), files))
+        most_recent_voevent = sorted(voevents, key=lambda x: int(x.split('-')[1]), reverse=True)[0]
+        event_details = ElementTree.parse(self.client.get(files[most_recent_voevent]))
+        root = event_details.getroot()
+
+        p_astro = dict().fromkeys(
+            ['BNS', 'NSBH', 'BBH', 'MassGap', 'Terrestrial'], 0)
+        for child in root.findall('./What/Group/'):
+            name = child.get('name')
+            if name in p_astro:
+                p_astro[name] = float(child.get('value'))
+
+        return p_astro
 
     async def _periodic_event_updater(self):
         """
@@ -159,7 +192,7 @@ class Events(object):
                 event_types.items(), key=lambda value: value[1], reverse=True)[0]
         except AttributeError:
             logging.error(f"Failed to get most likely event of {event_id}")
-            return (None, None)
+            return None, None
 
         return most_likely, confidence
 
@@ -265,8 +298,8 @@ def time_ago(dt: datetime.datetime) -> str:
 
     return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
 
-if __name__ is '__main__':
-    client = ligo.gracedb.rest.GraceDb()
-    files = client.files('S190510g').json()
-
-    latest = get_latest_file_url(files, 'p_astro', '.json')
+# if __name__ is '__main__':
+#     client = ligo.gracedb.rest.GraceDb()
+#     files = client.files('S190510g').json()
+#
+#     latest = get_latest_file_url(files, 'p_astro', '.json')
