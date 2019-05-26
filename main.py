@@ -23,6 +23,10 @@ async def echo(message: types.Message):
 async def echo(message: types.Message):
     await bot.send_latest(message)
 
+@dp.message_handler(commands=['stats'])
+async def echo(message: types.Message):
+    await bot.send_o3_stats(message)
+
 
 async def on_startup(dp):
     webhook_url = f'{get_ngrok_url()}/{secret}'

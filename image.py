@@ -16,8 +16,8 @@ class ImageFromUrl(object):
     """
 
     def __init__(self, url: str, border: int = 5):
-        self.url = url.split('/')
-        self.event_id = self.url[-3]
+        self.url = url
+        self.event_id = self.url.split('/')[-3]
         self.filename = self.get_filename()
 
         self.dir = f'./img/{self.event_id}'
@@ -50,7 +50,7 @@ class ImageFromUrl(object):
         str
             Converted filename.
         """
-        fname = self.url[-1]
+        fname = self.url.split('/')[-1]
         if ',' in fname:
             _fname, _i = fname.split(',')
             _name, _extension = _fname.split('.')

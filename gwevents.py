@@ -51,6 +51,7 @@ class Events(object):
         self.events = df
 
         self._add_possible_event_types()
+        self._add_most_likely_event_types()
         self._add_event_distances()
 
     def _add_event_distances(self):
@@ -79,6 +80,22 @@ class Events(object):
             except ligo.gracedb.exceptions.HTTPError:
                 pass
 
+    def _add_most_likely_event_types(self) -> None:
+        """
+        Adds the most likely event types to the event dataframe.
+
+        Returns
+        -------
+        None.
+        """
+        logging.info("Getting most likely event types.")
+        _most_likely = pd.Series(name='most_likely')
+        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
+            progress_bar(i, len(self.events), "Most likely types")
+            _most_likely[event_name], _ = self.get_likely_event_type(event_name)
+
+        self.events = pd.concat([self.events, _most_likely], axis=1)
+
     def _add_possible_event_types(self):
         """
         Adds the event type to the events data frame.
@@ -94,9 +111,13 @@ class Events(object):
         _all_types = pd.Series(name='event_types')
         for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
             progress_bar(i, len(self.events), "Event types")
+
+            filenames_with_url = self.client.files(event_name).json()
             try:
-                event_type = self.client.files(event_name, 'p_astro.json').json()
+                file_url = get_latest_file_url(filenames_with_url, 'p_astro', '.json')
+                event_type = self.client.files(event_name, file_url.split('/')[-1]).json()
             except ligo.gracedb.exceptions.HTTPError:
+                logging.error(f"Failed to get event types of {event_name}")
                 event_type = None
                 pass
             _all_types[event_name] = event_type
@@ -120,7 +141,7 @@ class Events(object):
 
     def get_likely_event_type(self, event_id: str) -> tuple:
         """
-        Return the most likely event type of a certain even.
+        Return the most likely event type of a certain event.
 
         Parameters
         ----------
@@ -132,30 +153,15 @@ class Events(object):
         tuple
             Containing the event type and the likelihood of that event.
         """
-        _event_types = {
-            # Probability that the source is a binary black hole merger (both
-            # objects heavier than 5 solar masses)
-            'BBH': 'binary black hole merger',
-            # Probability that the source is a binary neutron star merger
-            # (both objects lighter than 3 solar masses)
-            'BNS': 'binary neutron star merger',
-            # Probability that the source is a neutron star-black hole merger
-            # (primary heavier than 5 solar masses, secondary lighter than 3
-            # solar masses)
-            'NSBH': 'neutron start black hole merger',
-            # Probability that the source is terrestrial(i.e., a background
-            # noise fluctuation or a glitch)
-            'Terrestrial': 'terrestrial',
-            # Probability that the source has at least one object between 3 and
-            # 5 solar masses
-            'MassGap': 'mass gap',
-        }
+        try:
+            event_types = self.events.loc[event_id, 'event_types']
+            most_likely, confidence = sorted(
+                event_types.items(), key=lambda value: value[1], reverse=True)[0]
+        except AttributeError:
+            logging.error(f"Failed to get most likely event of {event_id}")
+            return (None, None)
 
-        event_types = self.events.loc[event_id, 'event_types']
-        most_likely, confidence = sorted(
-            event_types.items(), key=lambda value: value[1], reverse=True)[0]
-
-        return _event_types[most_likely], confidence
+        return most_likely, confidence
 
     def latest(self) -> pd.Series:
         """
@@ -258,3 +264,9 @@ def time_ago(dt: datetime.datetime) -> str:
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
     return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
+
+if __name__ is '__main__':
+    client = ligo.gracedb.rest.GraceDb()
+    files = client.files('S190510g').json()
+
+    latest = get_latest_file_url(files, 'p_astro', '.json')
