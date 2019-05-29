@@ -4,11 +4,15 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, secret
+from config import API_TOKEN, preliminairy_command, secret
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s \t %(name)-12s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M'
+)
 
 bot = GraceBot(token=API_TOKEN)
 dp = Dispatcher(bot)
