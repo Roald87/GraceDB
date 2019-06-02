@@ -44,7 +44,7 @@ class VOEvent(object):
         """
         Get the most recent VOEvent of this event.
 
-        D data is taken directly from the GraceDB.
+        Data is taken directly from the GraceDB.
 
         Parameters
         ----------
@@ -64,6 +64,9 @@ class VOEvent(object):
 
         voevent_xml = self._client.get(all_event_files[most_recent_voevent])
         self._xml = ElementTree.parse(voevent_xml).getroot()
+
+    def from_string(self, string: str):
+        self._xml = ElementTree.ElementTree(ElementTree.fromstring(string)).getroot()
 
 
 if __name__ == "__main__":
