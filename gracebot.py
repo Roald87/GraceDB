@@ -11,6 +11,7 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
+        # self.subscribers = PermanentSet('subscribers.txt')
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
@@ -29,6 +30,13 @@ class GraceBot(Bot):
             # 5 solar masses
             'MassGap': 'mass gap',
         }
+
+    async def send_preliminary(self, message, alert: str):
+        text = f"A new preliminairy event has been added to the database! {alert}"
+        await self.send_message(34702149, text)
+
+    def _process_gcn(self, payload, root):
+        pass
 
     async def send_welcome_message(self, message: types.Message) -> None:
         """

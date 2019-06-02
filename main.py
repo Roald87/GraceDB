@@ -4,7 +4,7 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, logging_kwargs, secret
+from config import API_TOKEN, logging_kwargs, preliminary_command, secret
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 
@@ -29,15 +29,20 @@ async def echo(message: types.Message):
     await bot.send_o3_stats(message)
 
 
+@dp.message_handler(commands=[preliminary_command])
+async def echo(message: types.Message):
+    root = message.entities[0].url
+    await bot.send_preliminary(message, root)
+
 async def on_startup(dp):
     webhook_url = f'{get_ngrok_url()}/{secret}'
-
     await bot.set_webhook(webhook_url)
 
 
 async def on_shutdown(dp):
     # insert code here to run it before shutdown
     pass
+
 
 if __name__ == '__main__':
     webapp_host = 'localhost'

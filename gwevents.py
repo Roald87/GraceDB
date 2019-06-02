@@ -50,7 +50,7 @@ class Events(object):
         df.set_index('superevent_id', inplace=True)
         df['created'] = pd.to_datetime(df['created'])
 
-        self.events = df
+        self.events = df.iloc[:3]
 
         self._add_possible_event_types()
         self._add_most_likely_event_types()
@@ -141,6 +141,7 @@ class Events(object):
         dict
             Containing the same info as the `p_astro.json`.
         """
+
         voevent = VOEvent()
         voevent.from_event_id(event_id)
 
