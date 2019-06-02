@@ -21,6 +21,8 @@ def process_gcn(payload, root):
     event_info = dict()
     event_info['p_astro'] = voe.p_astro
     event_info['id'] = voe.id
+    event_info['distance'] = voe.distance
+    event_info['distance_std'] = voe.distance_std
 
     sender.post_preliminairy(json.dumps(event_info))
     # # Respond only to 'test' events.

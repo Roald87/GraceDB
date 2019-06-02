@@ -9,7 +9,7 @@ import timeago
 from astropy.io import fits
 from ligo.gracedb.rest import GraceDb
 
-from functions import progress_bar
+from functions import mpc_to_mly, progress_bar
 from image import ImageFromUrl
 from voevent import VOEvent
 
@@ -251,23 +251,6 @@ def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> s
     link = files.get(newest_file, None)
 
     return link
-
-
-def mpc_to_mly(num_in_mpc: float) -> float:
-    """
-    Convert a number from megaparsec to million light years.
-
-    Parameters
-    ----------
-    num_in_mpc : float
-        Distance in megaparsec to convert.
-
-    Returns
-    -------
-    float
-        Distance in million light years.
-    """
-    return num_in_mpc * 3.2637977445371
 
 
 def time_ago(dt: datetime.datetime) -> str:

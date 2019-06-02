@@ -31,3 +31,20 @@ def progress_bar(count: int, total: int, prefix: str = '') -> None:
 
     sys.stdout.write(f'\r{prefix}: [{bar}] {percents}%')
     sys.stdout.flush()
+
+
+def mpc_to_mly(num_in_mpc: float) -> float:
+    """
+    Convert a number from megaparsec to million light years.
+
+    Parameters
+    ----------
+    num_in_mpc : float
+        Distance in megaparsec to convert.
+
+    Returns
+    -------
+    float
+        Distance in million light years.
+    """
+    return num_in_mpc * 3.2637977445371

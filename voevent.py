@@ -1,21 +1,41 @@
 import logging
 from xml.etree import ElementTree
 
+from astropy.io import fits
 from ligo.gracedb.rest import GraceDb
 
 from config import logging_kwargs
+from functions import mpc_to_mly
 
 logging.basicConfig(**logging_kwargs)
+
 
 class VOEvent(object):
 
     def __init__(self):
         self._client = GraceDb()
         self._xml = None
+        self._skymap_url = None
 
     @property
     def xml(self) -> ElementTree.Element:
         return self._xml
+
+    @property
+    def distance(self):
+        if not self._skymap_url:
+            self._get_skymap()
+
+        with fits.open(self._skymap_url) as fit_data:
+            return mpc_to_mly(fit_data[1].header['DISTMEAN'])
+
+    @property
+    def distance_std(self):
+        if not self._skymap_url:
+            self._get_skymap()
+
+        with fits.open(self._skymap_url) as fit_data:
+            return mpc_to_mly(fit_data[1].header['DISTSTD'])
 
     @property
     def id(self) -> str:
@@ -36,6 +56,16 @@ class VOEvent(object):
                 _p_astro[_name] = float(_child.get('value'))
 
         return _p_astro
+
+    def _get_skymap(self):
+        assert self._xml, "Load an xml file first using from_file or from_event_id!"
+
+        for _child in self._xml.findall('.//Param'):
+             if _child.get('name') == 'skymap_fits':
+                self._skymap_url = _child.get('value')
+                break
+        else:
+            raise FileNotFoundError("Couldn't find a skymap URL.")
 
     def from_file(self, filename: str):
         self._xml = ElementTree.parse(filename).getroot()
@@ -75,9 +105,5 @@ if __name__ == "__main__":
     # event.from_file('MS181101ab-3-Update.xml')
     event.from_event_id('S190521r')
 
-    for child in event.xml.findall('.//Param'):
-        name = child.get('name')
-        print(name)
-        if name == 'skymap_fits':
-            print(child.get('value'))
-    # print(event.p_astro)
+    print(event.distance)
+    print(event.distance_std)

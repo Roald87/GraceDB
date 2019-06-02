@@ -32,7 +32,7 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message, alert: str):
-        text = f"A new preliminairy event has been added to the database! {alert}"
+        text = f"A new preliminary event has been added to the database! {alert}"
         await self.send_message(34702149, text)
 
     def _process_gcn(self, payload, root):
