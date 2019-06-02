@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import logging
-from xml.etree import ElementTree
 
 import ligo
 import pandas as pd
@@ -12,6 +11,7 @@ from ligo.gracedb.rest import GraceDb
 
 from functions import progress_bar
 from image import ImageFromUrl
+from voevent import VOEvent
 
 
 class Events(object):
@@ -141,21 +141,10 @@ class Events(object):
         dict
             Containing the same info as the `p_astro.json`.
         """
-        files = self.client.files(event_id).json()
+        voevent = VOEvent()
+        voevent.from_event_id(event_id)
 
-        voevents = list(filter(lambda x: (event_id in x) and (x[-4:] == '.xml'), files))
-        most_recent_voevent = sorted(voevents, key=lambda x: int(x.split('-')[1]), reverse=True)[0]
-        event_details = ElementTree.parse(self.client.get(files[most_recent_voevent]))
-        root = event_details.getroot()
-
-        p_astro = dict().fromkeys(
-            ['BNS', 'NSBH', 'BBH', 'MassGap', 'Terrestrial'], 0)
-        for child in root.findall('./What/Group/'):
-            name = child.get('name')
-            if name in p_astro:
-                p_astro[name] = float(child.get('value'))
-
-        return p_astro
+        return voevent.p_astro
 
     async def _periodic_event_updater(self):
         """
@@ -298,8 +287,6 @@ def time_ago(dt: datetime.datetime) -> str:
 
     return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
 
-# if __name__ is '__main__':
-#     client = ligo.gracedb.rest.GraceDb()
-#     files = client.files('S190510g').json()
-#
-#     latest = get_latest_file_url(files, 'p_astro', '.json')
+if __name__ == '__main__':
+    events = Events()
+    events.update_events()
