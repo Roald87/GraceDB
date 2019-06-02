@@ -34,6 +34,7 @@ async def echo(message: types.Message):
     root = message.entities[0].url
     await bot.send_preliminary(message, root)
 
+
 async def on_startup(dp):
     webhook_url = f'{get_ngrok_url()}/{secret}'
     await bot.set_webhook(webhook_url)

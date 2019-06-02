@@ -50,7 +50,7 @@ class Events(object):
         df.set_index('superevent_id', inplace=True)
         df['created'] = pd.to_datetime(df['created'])
 
-        self.events = df.iloc[:3]
+        self.events = df.iloc[:2]
 
         self._add_possible_event_types()
         self._add_most_likely_event_types()

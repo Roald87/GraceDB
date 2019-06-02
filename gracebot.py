@@ -38,6 +38,33 @@ class GraceBot(Bot):
     def _process_gcn(self, payload, root):
         pass
 
+    async def send_event_info(self, message: types.Message, event_id: str) -> None:
+        event = self.events.events.loc[event_id]
+        text = (
+            f'*{event.name.upper()}*\n'
+            f'{time_ago(event["created"])}\n\n')
+
+        try:
+            event_type, confidence = self.events.get_likely_event_type(event.name)
+            confirmation_states = {'s': 'Unconfirmed', 'g': 'Confirmed'}
+            confirmation_state = confirmation_states[event.name[0].lower()]
+            text += f'{confirmation_state} {self.event_types[event_type]} ({confidence:.2%}) event.'
+
+            distance_mean = round(event["distance_mean_Mly"] / 1000, 2)
+            distance_std = round(event["distance_std_Mly"] / 1000, 2)
+            text = text[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
+        except KeyError:
+            pass
+
+        await self.send_message(message.chat.id, text, parse_mode='markdown')
+
+        try:
+            with open(self.events.picture(event.name), 'rb') as picture:
+                await self.send_photo(message.chat.id, picture)
+        except FileNotFoundError:
+            logging.error("Couldn't find the event image")
+            return None
+
     async def send_welcome_message(self, message: types.Message) -> None:
         """
         Send a welcome message to the user.
@@ -72,30 +99,7 @@ class GraceBot(Bot):
         None.
         """
         event = self.events.latest()
-        text = (
-            f'*{event.name.upper()}*\n'
-            f'{time_ago(event["created"])}\n\n')
-
-        try:
-            event_type, confidence = self.events.get_likely_event_type(event.name)
-            confirmation_states = {'s': 'Unconfirmed', 'g': 'Confirmed'}
-            confirmation_state = confirmation_states[event.name[0].lower()]
-            text += f'{confirmation_state} {self.event_types[event_type]} ({confidence:.2%}) event.'
-
-            distance_mean = round(event["distance_mean_Mly"] / 1000, 2)
-            distance_std = round(event["distance_std_Mly"] / 1000, 2)
-            text = text[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
-        except KeyError:
-            pass
-
-        await self.send_message(message.chat.id, text, parse_mode='markdown')
-
-        try:
-            with open(self.events.picture(event.name), 'rb') as picture:
-                await self.send_photo(message.chat.id, picture)
-        except FileNotFoundError:
-            logging.error("Couldn't find the event image")
-            return None
+        await self.send_event_info(message, event.name)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
