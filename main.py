@@ -4,7 +4,8 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, logging_kwargs, preliminary_command, secret
+from config import API_TOKEN, logging_kwargs, preliminary_command, retraction_command, secret, \
+    update_command
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 
@@ -31,8 +32,17 @@ async def echo(message: types.Message):
 
 @dp.message_handler(commands=[preliminary_command])
 async def echo(message: types.Message):
-    root = message.entities[0].url
-    await bot.send_preliminary(message, root)
+    await bot.send_preliminary(message)
+
+
+@dp.message_handler(commands=[update_command])
+async def echo(message: types.Message):
+    await bot.send_update(message)
+
+
+@dp.message_handler(commands=[retraction_command])
+async def echo(message: types.Message):
+    await bot.send_retraction(message)
 
 
 async def on_startup(dp):

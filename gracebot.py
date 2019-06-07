@@ -31,14 +31,30 @@ class GraceBot(Bot):
             'MassGap': 'mass gap',
         }
 
-    async def send_preliminary(self, message, alert: str):
-        text = f"A new preliminary event has been added to the database! {alert}"
-        await self.send_message(34702149, text)
+    async def send_preliminary(self, message):
+        self.events.update_events()
 
-    def _process_gcn(self, payload, root):
-        pass
+        text = f"A new event has been measured!"
+        chat_id = 34702149
+        await self.send_message(chat_id, text)
+        await self.send_latest(message, chat_id=chat_id)
 
-    async def send_event_info(self, message: types.Message, event_id: str) -> None:
+    async def send_update(self, message):
+        # self.events.update_events()
+
+        text = f"An event has been updated."
+        chat_id = 34702149
+        await self.send_message(chat_id, text)
+
+    async def send_retraction(self, message):
+        # self.events.update_events()
+
+        text = f"An event has been retracted."
+        chat_id = 34702149
+        await self.send_message(chat_id, text)
+
+    async def send_event_info(self, message: types.Message, event_id: str, chat_id:str=None) -> \
+            None:
         event = self.events.events.loc[event_id]
         text = (
             f'*{event.name.upper()}*\n'
@@ -56,11 +72,12 @@ class GraceBot(Bot):
         except KeyError:
             pass
 
-        await self.send_message(message.chat.id, text, parse_mode='markdown')
+        _chat_id = chat_id if chat_id else message.chat.id
+        await self.send_message(_chat_id, text, parse_mode='markdown')
 
         try:
             with open(self.events.picture(event.name), 'rb') as picture:
-                await self.send_photo(message.chat.id, picture)
+                await self.send_photo(_chat_id, picture)
         except FileNotFoundError:
             logging.error("Couldn't find the event image")
             return None
@@ -85,7 +102,7 @@ class GraceBot(Bot):
 
         await self.send_message(message.chat.id, text)
 
-    async def send_latest(self, message: types.Message) -> None:
+    async def send_latest(self, message: types.Message, chat_id: str=None) -> None:
         """
         Send some details of the most recent gravitational wave event.
 
@@ -99,7 +116,7 @@ class GraceBot(Bot):
         None.
         """
         event = self.events.latest()
-        await self.send_event_info(message, event.name)
+        await self.send_event_info(message, event.name, chat_id)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
