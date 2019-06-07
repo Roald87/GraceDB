@@ -20,8 +20,8 @@ def post_preliminairy():
     else:
         logging.error("Failed to POST preliminary to webhook URL.")
 
-def post_update():
-    update_message = fake_telegram_update(update_command)
+def post_update(event_id):
+    update_message = fake_telegram_update(f'{update_command} {event_id}')
 
     res = requests.post(
         f'{get_ngrok_url()}/{secret}',
@@ -31,8 +31,8 @@ def post_update():
     else:
         logging.error("Failed to POST update to webhook URL.")
 
-def post_retraction():
-    retraction_message = fake_telegram_update(retraction_command)
+def post_retraction(event_id):
+    retraction_message = fake_telegram_update(f'{retraction_command} {event_id}')
 
     res = requests.post(
         f'{get_ngrok_url()}/{secret}',

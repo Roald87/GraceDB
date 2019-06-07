@@ -32,7 +32,12 @@ def process_gcn(payload, root):
         'Update': sender.post_update,
         'Retraction': sender.post_retraction,
     }
-    message_poster[params['AlertType']]()
+
+    alert_type = params['AlertType']
+    if alert_type.lower() in ['update', 'retraction']:
+        message_poster[alert_type](params['GraceID'])
+    else:
+        message_poster[alert_type]()
 
 def test_send_preliminairy():
     payload = open('MS181101ab-1-Preliminary.xml', 'rb').read()

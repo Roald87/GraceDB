@@ -42,14 +42,15 @@ class GraceBot(Bot):
     async def send_update(self, message):
         # self.events.update_events()
 
-        text = f"An event has been updated."
+        _event_id = message.text.split(' ')[-1]
+        text = f"Event {_event_id} has been updated."
         chat_id = 34702149
         await self.send_message(chat_id, text)
 
     async def send_retraction(self, message):
         # self.events.update_events()
-
-        text = f"An event has been retracted."
+        _event_id = message.text.split(' ')[-1]
+        text = f"Event {_event_id} has been retracted."
         chat_id = 34702149
         await self.send_message(chat_id, text)
 
