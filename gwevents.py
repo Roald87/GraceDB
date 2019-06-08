@@ -34,7 +34,6 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
-        logging.info("Getting the latest events.")
         _events = self.client.superevents(query='Production', orderby=['-created'])
 
         self.events = {}

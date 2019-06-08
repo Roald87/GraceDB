@@ -144,26 +144,28 @@ class GraceBot(Bot):
         -------
         None.
         """
-        #TODO take confirmed from other source since it will not be updated
+        # TODO take confirmed from other source since it will not be updated
         # in graceDB if they are confirmed. For that use:
         # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
         event_counter = Counter([
             _info['most_likely']
             for _info in self.events.events.values()])
 
-        unconfirmed_BBH = event_counter['SBBH']
-        unconfirmed_BNS = event_counter['SBNS']
-        unconfirmed_NSBH = event_counter['SNSBH']
-        terrestrial = event_counter['STerrestrial']
+        unconfirmed_bbh = event_counter['BBH']
+        unconfirmed_bns = event_counter['BNS']
+        unconfirmed_nsbh = event_counter['NSBH']
+        unconfirmed_mg = event_counter['MassGap']
+        terrestrial = event_counter['Terrestrial']
 
         text = (
             f"Observational run 3 has detected *{len(self.events.events)}* "
             "events since April 1st 2019.\n\n"
             ""
             "Event types (confirmed/unconfirmed)\n"
-            f"Binary black hole mergers: {0}/{unconfirmed_BBH}.\n"
-            f"Binary neutron star mergers: {0}/{unconfirmed_BNS}.\n"
-            f"Neutron star black hole mergers: {0}/{unconfirmed_NSBH}.\n"
+            f"Binary black hole mergers: {0}/{unconfirmed_bbh}.\n"
+            f"Binary neutron star mergers: {0}/{unconfirmed_bns}.\n"
+            f"Neutron star black hole mergers: {0}/{unconfirmed_nsbh}.\n"
+            f"At least one object between 3 and 5 solar masses: {0}/{unconfirmed_mg}.\n"
             f"Likely terrestrial: {terrestrial}.\n"
         )
 
