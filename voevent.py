@@ -23,6 +23,9 @@ class VOEvent(object):
 
     @property
     def distance(self):
+        """
+        Return distance of event in million light years.
+        """
         if not self._skymap_url:
             self._get_skymap()
 
@@ -31,6 +34,9 @@ class VOEvent(object):
 
     @property
     def distance_std(self):
+        """
+        Return one sigma uncertainty in distance in million light years.
+        """
         if not self._skymap_url:
             self._get_skymap()
 
@@ -39,6 +45,9 @@ class VOEvent(object):
 
     @property
     def id(self) -> str:
+        """
+        Return event id.
+        """
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
         for _child in self._xml.findall('What/'):
@@ -100,6 +109,7 @@ class VOEvent(object):
 
 
 if __name__ == "__main__":
+    # For testing purposes
     event = VOEvent()
     # event.from_file('MS181101ab-1-Preliminary.xml')
     # event.from_file('MS181101ab-3-Update.xml')

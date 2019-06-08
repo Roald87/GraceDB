@@ -35,37 +35,49 @@ class GraceBot(Bot):
         self.events.update_events()
 
         text = f"A new event has been measured!"
-        chat_id = 34702149
-        await self.send_message(chat_id, text)
-        await self.send_latest(message, chat_id=chat_id)
+
+        await self.send_message(message.chat.id, text)
+        await self.send_latest(message)
 
     async def send_update(self, message):
-        # self.events.update_events()
+        self.events.update_events()
 
         _event_id = message.text.split(' ')[-1]
         text = f"Event {_event_id} has been updated."
-        chat_id = 34702149
-        await self.send_message(chat_id, text)
+
+        await self.send_message(message.chat.id, text)
 
     async def send_retraction(self, message):
-        # self.events.update_events()
         _event_id = message.text.split(' ')[-1]
         text = f"Event {_event_id} has been retracted."
-        chat_id = 34702149
-        await self.send_message(chat_id, text)
 
-    async def send_event_info(self, message: types.Message, event_id: str, chat_id:str=None) -> \
-            None:
-        event = self.events.events.loc[event_id]
+        await self.send_message(message.chat.id, text)
+
+    async def send_event_info(self, message: types.Message, event_id: str) -> None:
+        """
+        Send information of a specific event to the user.
+
+        Parameters
+        ----------
+        message : aiogram.types.Message
+            The message send by the user.
+        event_id : str
+            Send information about this event to the user.
+
+        Returns
+        -------
+        None
+        """
+        event = self.events.events[event_id]
+
         text = (
-            f'*{event.name.upper()}*\n'
+            f'*{event_id.upper()}*\n'
             f'{time_ago(event["created"])}\n\n')
 
         try:
-            event_type, confidence = self.events.get_likely_event_type(event.name)
-            confirmation_states = {'s': 'Unconfirmed', 'g': 'Confirmed'}
-            confirmation_state = confirmation_states[event.name[0].lower()]
-            text += f'{confirmation_state} {self.event_types[event_type]} ({confidence:.2%}) event.'
+            event_type = self.events.get_likely_event_type(event_id)
+            confidence = self.events.events[event_id]['event_types'][event_type]
+            text += f'Unconfirmed {self.event_types[event_type]} ({confidence:.2%}) event.'
 
             distance_mean = round(event["distance_mean_Mly"] / 1000, 2)
             distance_std = round(event["distance_std_Mly"] / 1000, 2)
@@ -73,12 +85,11 @@ class GraceBot(Bot):
         except KeyError:
             pass
 
-        _chat_id = chat_id if chat_id else message.chat.id
-        await self.send_message(_chat_id, text, parse_mode='markdown')
+        await self.send_message(message.chat.id, text, parse_mode='markdown')
 
         try:
-            with open(self.events.picture(event.name), 'rb') as picture:
-                await self.send_photo(_chat_id, picture)
+            with open(self.events.picture(event_id), 'rb') as picture:
+                await self.send_photo(message.chat.id, picture)
         except FileNotFoundError:
             logging.error("Couldn't find the event image")
             return None
@@ -103,7 +114,7 @@ class GraceBot(Bot):
 
         await self.send_message(message.chat.id, text)
 
-    async def send_latest(self, message: types.Message, chat_id: str=None) -> None:
+    async def send_latest(self, message: types.Message) -> None:
         """
         Send some details of the most recent gravitational wave event.
 
@@ -116,8 +127,9 @@ class GraceBot(Bot):
         -------
         None.
         """
-        event = self.events.latest()
-        await self.send_event_info(message, event.name, chat_id)
+        _event_id = list(self.events.latest)[0]
+
+        await self.send_event_info(message, _event_id)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
@@ -132,16 +144,15 @@ class GraceBot(Bot):
         -------
         None.
         """
+        #TODO take confirmed from other source since it will not be updated
+        # in graceDB if they are confirmed. For that use:
+        # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
         event_counter = Counter([
-            _id[0] + _type
-            for _id, _type in self.events.events['most_likely'].items()
-            if _id and _type])
+            _info['most_likely']
+            for _info in self.events.events.values()])
 
-        confirmed_BBH = event_counter['GBBH']
         unconfirmed_BBH = event_counter['SBBH']
-        confirmed_BNS = event_counter['GBNS']
         unconfirmed_BNS = event_counter['SBNS']
-        confirmed_NSBH = event_counter['GNSBH']
         unconfirmed_NSBH = event_counter['SNSBH']
         terrestrial = event_counter['STerrestrial']
 
@@ -150,9 +161,9 @@ class GraceBot(Bot):
             "events since April 1st 2019.\n\n"
             ""
             "Event types (confirmed/unconfirmed)\n"
-            f"Binary black hole mergers: {confirmed_BBH}/{unconfirmed_BBH}.\n"
-            f"Binary neutron star mergers: {confirmed_BNS}/{unconfirmed_BNS}.\n"
-            f"Neutron star black hole mergers: {confirmed_NSBH}/{unconfirmed_NSBH}.\n"
+            f"Binary black hole mergers: {0}/{unconfirmed_BBH}.\n"
+            f"Binary neutron star mergers: {0}/{unconfirmed_BNS}.\n"
+            f"Neutron star black hole mergers: {0}/{unconfirmed_NSBH}.\n"
             f"Likely terrestrial: {terrestrial}.\n"
         )
 
