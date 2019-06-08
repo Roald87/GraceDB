@@ -22,7 +22,7 @@ class Events(object):
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
 
-    def update_events(self):
+    def update_all_events(self):
         """
         Get the latest events from the Grace database.
 
@@ -35,57 +35,59 @@ class Events(object):
         https://gracedb.ligo.org/latest/
         """
         _events = self.client.superevents(query='Production', orderby=['-created'])
+        _events = list(_events)
 
         self.events = {}
-        for _event in _events:
-            # ADVNO = advocate says event is not ok.
-            if 'ADVNO' not in _event['labels']:
-                _event_id = _event.pop('superevent_id')
-                _event['created'] = dateutil.parser.parse(_event['created'])
-                self.events[_event_id] = _event
+        total_events = len(_events)
+        for i, _event in enumerate(_events):
+            progress_bar(i, total_events, "Updating events")
+            self.update_single_event(_event['superevent_id'])
 
-        #TODO only take last three events for testing. Remove for master.
-        self.events = {k:v for i, (k, v) in enumerate(self.events.items()) if i < 3}
-
-        self._add_possible_event_types()
-        self._add_event_distances()
-
-    def _add_event_distances(self):
+    def update_single_event(self, event_id: str):
         """
-        Adds the event distances to the event data frame.
-
-        Returns
-        -------
-        None
-        """
-        logging.info("Getting event distances.")
-
-        for i, _event_id in enumerate(self.events.keys(), 1):
-            progress_bar(i, len(self.events), "Event distances")
-
-            self._add_event_distance(_event_id)
-
-    def _add_event_distance(self, event_id: str):
-        """
-        Add distance and its standard deviation to the event DataFrame
 
         Parameters
         ----------
-        event_id :str
+        event_id
+
+        Returns
+        -------
+
+        """
+        _event = self.client.superevent(event_id)
+        _event = _event.json()
+
+        # ADVNO = advocate says event is not ok.
+        if 'ADVNO' in _event['labels']:
+            return
+        else:
+            _event_id = _event.pop('superevent_id')
+            _event['created'] = dateutil.parser.parse(_event['created'])
+            self.events[_event_id] = _event
+
+            voevent = VOEvent()
+            voevent.from_event_id(event_id)
+            self._add_event_distance(voevent)
+            self._add_event_classification(voevent)
+
+    def _add_event_distance(self, voevent: VOEvent):
+        """
+        Add distance and its standard deviation to the event dictionary.
+
+        Parameters
+        ----------
+        voevent : VOEvent
 
         Returns
         -------
         None
         """
-        voevent = VOEvent()
-        voevent.from_event_id(event_id)
+        self.events[voevent.id]['distance_mean_Mly'] = voevent.distance
+        self.events[voevent.id]['distance_std_Mly'] = voevent.distance_std
 
-        self.events[event_id]['distance_mean_Mly'] = voevent.distance
-        self.events[event_id]['distance_std_Mly'] = voevent.distance_std
-
-    def _add_possible_event_types(self):
+    def _add_event_classification(self, voevent: VOEvent):
         """
-        Adds the event type to the events data frame.
+        Adds the event type to the events dictionary.
 
         Possible event types are binary black hole merger, black hole neutron
         star merger etc.
@@ -94,16 +96,9 @@ class Events(object):
         -------
         None
         """
-        logging.info("Getting possible event types.")
-        for i, _event_id in enumerate(self.events.keys(), 1):
-            progress_bar(i, len(self.events), "Event types")
-
-            voevent = VOEvent()
-            voevent.from_event_id(_event_id)
-
-            self.events[_event_id]['event_types'] = voevent.p_astro
-            self.events[_event_id]['most_likely'] = \
-                self.get_likely_event_type(_event_id)
+        self.events[voevent.id]['event_types'] = voevent.p_astro
+        self.events[voevent.id]['most_likely'] = \
+            self.get_likely_event_type(voevent.id)
 
     async def _periodic_event_updater(self):
         """
@@ -116,7 +111,7 @@ class Events(object):
         """
         while True:
             logging.info("Refreshing event database.")
-            self.update_events()
+            self.update_all_events()
 
             await asyncio.sleep(delay=3600)
 
@@ -233,4 +228,4 @@ def time_ago(dt: datetime.datetime) -> str:
 
 if __name__ == '__main__':
     events = Events()
-    events.update_events()
+    events.update_all_events()

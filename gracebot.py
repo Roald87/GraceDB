@@ -32,7 +32,7 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message):
-        self.events.update_events()
+        self.events.update_all_events()
 
         text = f"A new event has been measured!"
 
@@ -40,15 +40,15 @@ class GraceBot(Bot):
         await self.send_latest(message)
 
     async def send_update(self, message):
-        self.events.update_events()
+        self.events.update_all_events()
 
-        _event_id = message.text.split(' ')[-1]
+        _event_id = event_id_from_message(message)
         text = f"Event {_event_id} has been updated."
 
         await self.send_message(message.chat.id, text)
 
     async def send_retraction(self, message):
-        _event_id = message.text.split(' ')[-1]
+        _event_id = event_id_from_message(message)
         text = f"Event {_event_id} has been retracted."
 
         await self.send_message(message.chat.id, text)
@@ -170,3 +170,23 @@ class GraceBot(Bot):
         )
 
         await self.send_message(message.chat.id, text, parse_mode='markdown')
+
+def event_id_from_message(message: types.Message) -> str:
+    """
+    Return the event id which is assumed to come right after the command.
+
+    Parameters
+    ----------
+    message : aiogram.types.Message
+        The message send by the user.
+
+    Returns
+    -------
+    The event id.
+    """
+    try:
+        _event_id = message.text.split(' ')[-1]
+    except KeyError:
+        _event_id = None
+
+    return _event_id

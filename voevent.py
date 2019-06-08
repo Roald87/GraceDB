@@ -93,6 +93,7 @@ class VOEvent(object):
         -------
         None
         """
+        # TODO use client.voevents(event_id)
         all_event_files = self._client.files(event_id).json()
 
         voevent_filter =  lambda x: (event_id in x) and (x[-4:] == '.xml')
