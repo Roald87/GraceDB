@@ -18,8 +18,8 @@ logging.basicConfig(**logging_kwargs)
 )
 def process_gcn(payload, root):
 
-    # if root.attrib['role'] != 'observation':
-    #     return
+    if root.attrib['role'] != 'observation':
+        return
 
     params = {
         elem.attrib['name']:

@@ -40,18 +40,23 @@ class GraceBot(Bot):
         await self.send_latest(message)
 
     async def send_update(self, message):
-        self.events.update_all_events()
-
         _event_id = event_id_from_message(message)
+        self.events.update_single_event(_event_id)
+
         text = f"Event {_event_id} has been updated."
 
         await self.send_message(message.chat.id, text)
+        await self.send_event_info(message, _event_id)
 
     async def send_retraction(self, message):
         _event_id = event_id_from_message(message)
-        text = f"Event {_event_id} has been retracted."
+        text = f"Event {_event_id} has been retracted. " \
+            f"The event details were:"
 
         await self.send_message(message.chat.id, text)
+        await self.send_event_info(message, _event_id)
+
+        self.events.update_all_events()
 
     async def send_event_info(self, message: types.Message, event_id: str) -> None:
         """
