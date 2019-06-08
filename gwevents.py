@@ -1,31 +1,28 @@
 import asyncio
 import datetime
 import logging
-from xml.etree import ElementTree
 
-import ligo
-import pandas as pd
-import pytz
+import dateutil.parser
 import timeago
-from astropy.io import fits
 from ligo.gracedb.rest import GraceDb
 
 from functions import progress_bar
 from image import ImageFromUrl
+from voevent import VOEvent
 
 
 class Events(object):
     """
-    Holds a pandas DataFrame with all superevents from the Grace database.
+    A dictionary with all superevents from the Grace database.
     """
 
     def __init__(self):
         self.client = GraceDb()
-        self.events = pd.DataFrame()
+        self.events = {}
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
 
-    def update_events(self):
+    def update_all_events(self):
         """
         Get the latest events from the Grace database.
 
@@ -37,69 +34,62 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
-        logging.info("Getting the latest events.")
-        events = self.client.superevents(query='Production', orderby=['-created'])
+        _events = self.client.superevents(query='Production', orderby=['-created'])
+        _events = list(_events)
 
-        df = pd.DataFrame()
-        for i, event in enumerate(events, 1):
-            event.pop('links')
-            labels = event.pop('labels')
-            # ADVNO = advocate says event is not ok.
-            if 'ADVNO' not in labels:
-                df = df.append({**event, 'labels': [labels]}, ignore_index=True)
-        df.set_index('superevent_id', inplace=True)
-        df['created'] = pd.to_datetime(df['created'])
+        self.events = {}
+        total_events = len(_events)
+        for i, _event in enumerate(_events):
+            progress_bar(i, total_events, "Updating events")
+            self.update_single_event(_event['superevent_id'])
+            if i > 3:
+                break
 
-        self.events = df
-
-        self._add_possible_event_types()
-        self._add_most_likely_event_types()
-        self._add_event_distances()
-
-    def _add_event_distances(self):
+    def update_single_event(self, event_id: str):
         """
-        Adds the event distances to the event data frame.
+
+        Parameters
+        ----------
+        event_id
+
+        Returns
+        -------
+
+        """
+        _event = self.client.superevent(event_id)
+        _event = _event.json()
+
+        # ADVNO = advocate says event is not ok.
+        if 'ADVNO' in _event['labels']:
+            return
+        else:
+            _event_id = _event.pop('superevent_id')
+            _event['created'] = dateutil.parser.parse(_event['created'])
+            self.events[_event_id] = _event
+
+            voevent = VOEvent()
+            voevent.from_event_id(event_id)
+            self._add_event_distance(voevent)
+            self._add_event_classification(voevent)
+
+    def _add_event_distance(self, voevent: VOEvent):
+        """
+        Add distance and its standard deviation to the event dictionary.
+
+        Parameters
+        ----------
+        voevent : VOEvent
 
         Returns
         -------
         None
         """
-        logging.info("Getting event distances.")
-        self.events = self.events.reindex(
-            columns=list(self.events) + ['distance_mean_Mly', 'distance_std_Mly'])
+        self.events[voevent.id]['distance_mean_Mly'] = voevent.distance
+        self.events[voevent.id]['distance_std_Mly'] = voevent.distance_std
 
-        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
-            progress_bar(i, len(self.events), "Event distances")
-
-            filenames_with_url = self.client.files(event_name).json()
-            try:
-                fit_url = get_latest_file_url(filenames_with_url, 'bayestar', '.fits')
-                with fits.open(fit_url) as fit_data:
-                    self.events.at[event_name, 'distance_mean_Mly'] = \
-                        mpc_to_mly(fit_data[1].header['DISTMEAN'])
-                    self.events.at[event_name, 'distance_std_Mly'] = \
-                        mpc_to_mly(fit_data[1].header['DISTSTD'])
-            except ligo.gracedb.exceptions.HTTPError:
-                pass
-
-    def _add_most_likely_event_types(self) -> None:
+    def _add_event_classification(self, voevent: VOEvent):
         """
-        Adds the most likely event types to the event dataframe.
-
-        Returns
-        -------
-        None.
-        """
-        logging.info("Getting most likely event types.")
-        _most_likely = pd.Series(name='most_likely')
-        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
-            _most_likely[event_name], _ = self.get_likely_event_type(event_name)
-
-        self.events = pd.concat([self.events, _most_likely], axis=1)
-
-    def _add_possible_event_types(self):
-        """
-        Adds the event type to the events data frame.
+        Adds the event type to the events dictionary.
 
         Possible event types are binary black hole merger, black hole neutron
         star merger etc.
@@ -108,54 +98,9 @@ class Events(object):
         -------
         None
         """
-        logging.info("Getting possible event types.")
-        _all_types = pd.Series(name='event_types')
-        for i, (event_name, _) in enumerate(self.events.iterrows(), 1):
-            progress_bar(i, len(self.events), "Event types")
-
-            try:
-                event_type = self._pastro_from_vo_event(event_name)
-            except ligo.gracedb.exceptions.HTTPError:
-                logging.error(f"Failed to get event types of {event_name}")
-                event_type = None
-                pass
-            _all_types[event_name] = event_type
-
-        self.events = pd.concat([self.events, _all_types], axis=1)
-
-    def _pastro_from_vo_event(self, event_id: str) -> dict:
-        """
-        Return event types from VOEvent xml which are also stored in `p_astro.json`.
-
-        For event 'S190510g' the latest `p_astro.json` didn't match with the
-        VOEvent xml file. The xml file contained more recent numbers. Therefore I
-        made this method.
-
-        Parameters
-        ----------
-        event_id : str
-            The super event you want to get the event classification of.
-
-        Returns
-        -------
-        dict
-            Containing the same info as the `p_astro.json`.
-        """
-        files = self.client.files(event_id).json()
-
-        voevents = list(filter(lambda x: (event_id in x) and (x[-4:] == '.xml'), files))
-        most_recent_voevent = sorted(voevents, key=lambda x: int(x.split('-')[1]), reverse=True)[0]
-        event_details = ElementTree.parse(self.client.get(files[most_recent_voevent]))
-        root = event_details.getroot()
-
-        p_astro = dict().fromkeys(
-            ['BNS', 'NSBH', 'BBH', 'MassGap', 'Terrestrial'], 0)
-        for child in root.findall('./What/Group/'):
-            name = child.get('name')
-            if name in p_astro:
-                p_astro[name] = float(child.get('value'))
-
-        return p_astro
+        self.events[voevent.id]['event_types'] = voevent.p_astro
+        self.events[voevent.id]['most_likely'] = \
+            self.get_likely_event_type(voevent.id)
 
     async def _periodic_event_updater(self):
         """
@@ -168,11 +113,11 @@ class Events(object):
         """
         while True:
             logging.info("Refreshing event database.")
-            self.update_events()
+            self.update_all_events()
 
             await asyncio.sleep(delay=3600)
 
-    def get_likely_event_type(self, event_id: str) -> tuple:
+    def get_likely_event_type(self, event_id: str) -> float:
         """
         Return the most likely event type of a certain event.
 
@@ -184,28 +129,30 @@ class Events(object):
         Returns
         -------
         tuple
-            Containing the event type and the likelihood of that event.
+            Most likely event type.
         """
         try:
-            event_types = self.events.loc[event_id, 'event_types']
-            most_likely, confidence = sorted(
+            event_types = self.events[event_id]['event_types']
+            most_likely, _ = sorted(
                 event_types.items(), key=lambda value: value[1], reverse=True)[0]
         except AttributeError:
             logging.error(f"Failed to get most likely event of {event_id}")
-            return None, None
+            return None
 
-        return most_likely, confidence
+        return most_likely
 
-    def latest(self) -> pd.Series:
+    @property
+    def latest(self) -> dict:
         """
         Return the latest event from the Grace database.
 
         Returns
         -------
-        pandas.Series
+        dict
             Latest event.
         """
-        return self.events.iloc[0]
+        for _id, _info in self.events.items():
+            return {_id: _info}
 
     def picture(self, event_id: str) -> str:
         """
@@ -263,23 +210,6 @@ def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> s
     return link
 
 
-def mpc_to_mly(num_in_mpc: float) -> float:
-    """
-    Convert a number from megaparsec to million light years.
-
-    Parameters
-    ----------
-    num_in_mpc : float
-        Distance in megaparsec to convert.
-
-    Returns
-    -------
-    float
-        Distance in million light years.
-    """
-    return num_in_mpc * 3.2637977445371
-
-
 def time_ago(dt: datetime.datetime) -> str:
     """
     When a datetime took place, e.g. 1 hour ago, 2 days ago, in 3 weeks.
@@ -296,10 +226,8 @@ def time_ago(dt: datetime.datetime) -> str:
     """
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
-    return timeago.format(dt.to_pydatetime().replace(tzinfo=pytz.UTC), current_date)
+    return timeago.format(dt, current_date)
 
-# if __name__ is '__main__':
-#     client = ligo.gracedb.rest.GraceDb()
-#     files = client.files('S190510g').json()
-#
-#     latest = get_latest_file_url(files, 'p_astro', '.json')
+if __name__ == '__main__':
+    events = Events()
+    events.update_all_events()
