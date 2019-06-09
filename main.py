@@ -4,8 +4,8 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, logging_kwargs, preliminary_command, retraction_command, secret, \
-    update_command
+from config import API_TOKEN, logging_kwargs, secret
+from config import preliminary_command, retraction_command, update_command
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 
@@ -29,6 +29,15 @@ async def send_latest_event(message: types.Message):
 async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
 
+
+@dp.message_handler(commands=['subscribe'])
+async def add_subscriber(message: types.Message):
+    await bot.add_subscriber(message)
+
+
+@dp.message_handler(commands=['unsubscribe'])
+async def remove_subscriber(message: types.Message):
+    await bot.remove_subscriber(message)
 
 @dp.message_handler(commands=[preliminary_command])
 async def send_preliminary(message: types.Message):

@@ -37,7 +37,7 @@ class GraceBot(Bot):
 
         text = f"A new event has been measured!"
 
-        for user_id in self.subscribers:
+        for user_id in self.subscribers.data:
             message.chat.id = user_id
             await self.send_message(message.chat.id, text)
             await self.send_latest(message)
@@ -48,7 +48,7 @@ class GraceBot(Bot):
 
         text = f"Event {_event_id} has been updated."
 
-        for user_id in self.subscribers:
+        for user_id in self.subscribers.data:
             message.chat.id = user_id
             await self.send_message(message.chat.id, text)
             await self.send_event_info(message, _event_id)
@@ -58,7 +58,7 @@ class GraceBot(Bot):
         text = f"Event {_event_id} has been retracted. " \
             f"The event details were:"
 
-        for user_id in self.subscribers:
+        for user_id in self.subscribers.data:
             message.chat.id = user_id
             await self.send_message(message.chat.id, text)
             await self.send_event_info(message, _event_id)
@@ -182,6 +182,28 @@ class GraceBot(Bot):
         )
 
         await self.send_message(message.chat.id, text, parse_mode='markdown')
+
+    async def add_subscriber(self, message: types.Message):
+        _user_id = message.chat.id
+        if self.subscribers.is_in_list(_user_id):
+            await self.send_message(_user_id, "You are already subscribed.")
+        else:
+            self.subscribers.add(message.chat.id)
+            await self.send_message(
+                _user_id,
+                "You will now receive the latest event updates."
+            )
+
+    async def remove_subscriber(self, message: types.Message):
+        _user_id = message.chat.id
+        if not self.subscribers.is_in_list(_user_id):
+            await self.send_message(_user_id, "You are not subscribed.")
+        else:
+            self.subscribers.remove(message.chat.id)
+            await self.send_message(
+                _user_id,
+                "You will no longer receive the latest event updates."
+            )
 
 def event_id_from_message(message: types.Message) -> str:
     """
