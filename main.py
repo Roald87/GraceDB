@@ -16,32 +16,32 @@ dp = Dispatcher(bot)
 
 
 @dp.message_handler(commands=['start', 'help'])
-async def echo(message: types.Message):
+async def send_welcome(message: types.Message):
     await bot.send_welcome_message(message)
 
 
 @dp.message_handler(commands=['latest'])
-async def echo(message: types.Message):
+async def send_latest_event(message: types.Message):
     await bot.send_latest(message)
 
 
 @dp.message_handler(commands=['stats'])
-async def echo(message: types.Message):
+async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
 
 
 @dp.message_handler(commands=[preliminary_command])
-async def echo(message: types.Message):
+async def send_preliminary(message: types.Message):
     await bot.send_preliminary(message)
 
 
 @dp.message_handler(commands=[update_command])
-async def echo(message: types.Message):
+async def send_update(message: types.Message):
     await bot.send_update(message)
 
 
 @dp.message_handler(commands=[retraction_command])
-async def echo(message: types.Message):
+async def send_retraction(message: types.Message):
     await bot.send_retraction(message)
 
 
@@ -50,17 +50,15 @@ async def on_startup(dp):
     await bot.set_webhook(webhook_url)
 
 
-async def on_shutdown(dp):
-    # insert code here to run it before shutdown
-    pass
-
-
 if __name__ == '__main__':
     webapp_host = 'localhost'
     webapp_port = get_port()
 
     start_webhook(
-        dispatcher=dp, webhook_path=f'/{secret}',
-        on_startup=on_startup, on_shutdown=on_shutdown,
-        skip_updates=True, host=webapp_host, port=webapp_port
+        dispatcher=dp,
+        webhook_path=f'/{secret}',
+        on_startup=on_startup,
+        skip_updates=True,
+        host=webapp_host,
+        port=webapp_port
     )
