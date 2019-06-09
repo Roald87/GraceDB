@@ -45,11 +45,6 @@ def test_send_preliminairy():
     root = lxml.etree.fromstring(payload)
     process_gcn(payload, root)
 
-def test_send_initial():
-    payload = open('MS181101ab-2-Initial.xml', 'rb').read()
-    root = lxml.etree.fromstring(payload)
-    process_gcn(payload, root)
-
 def test_send_update():
     payload = open('MS181101ab-3-Update.xml', 'rb').read()
     root = lxml.etree.fromstring(payload)

@@ -4,6 +4,7 @@ from collections import Counter
 from aiogram import Bot, types
 
 from gwevents import Events, time_ago
+from permanentset import PermanentSet
 
 
 class GraceBot(Bot):
@@ -11,7 +12,7 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
-        # self.subscribers = PermanentSet('subscribers.txt')
+        self.subscribers = PermanentSet('subscribers.txt')
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
@@ -36,8 +37,10 @@ class GraceBot(Bot):
 
         text = f"A new event has been measured!"
 
-        await self.send_message(message.chat.id, text)
-        await self.send_latest(message)
+        for user_id in self.subscribers:
+            message.chat.id = user_id
+            await self.send_message(message.chat.id, text)
+            await self.send_latest(message)
 
     async def send_update(self, message):
         _event_id = event_id_from_message(message)
@@ -45,16 +48,20 @@ class GraceBot(Bot):
 
         text = f"Event {_event_id} has been updated."
 
-        await self.send_message(message.chat.id, text)
-        await self.send_event_info(message, _event_id)
+        for user_id in self.subscribers:
+            message.chat.id = user_id
+            await self.send_message(message.chat.id, text)
+            await self.send_event_info(message, _event_id)
 
     async def send_retraction(self, message):
         _event_id = event_id_from_message(message)
         text = f"Event {_event_id} has been retracted. " \
             f"The event details were:"
 
-        await self.send_message(message.chat.id, text)
-        await self.send_event_info(message, _event_id)
+        for user_id in self.subscribers:
+            message.chat.id = user_id
+            await self.send_message(message.chat.id, text)
+            await self.send_event_info(message, _event_id)
 
         self.events.update_all_events()
 
