@@ -20,7 +20,7 @@ class ImageFromUrl(object):
         self.event_id = self.url.split('/')[-3]
         self.filename = self.get_filename()
 
-        self.dir = f'./img/{self.event_id}'
+        self.dir = f'gracebot/img/{self.event_id}'
         create_dir(self.dir)
 
         self._path = f'{self.dir}/{self.filename}'

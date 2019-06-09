@@ -4,6 +4,7 @@ import logging
 
 import dateutil.parser
 import timeago
+from ligo.gracedb.exceptions import HTTPError
 from ligo.gracedb.rest import GraceDb
 
 from functions import progress_bar
@@ -66,9 +67,12 @@ class Events(object):
             self.events[_event_id] = _event
 
             voevent = VOEvent()
-            voevent.from_event_id(event_id)
-            self._add_event_distance(voevent)
-            self._add_event_classification(voevent)
+            try:
+                voevent.from_event_id(event_id)
+                self._add_event_distance(voevent)
+                self._add_event_classification(voevent)
+            except HTTPError:
+                pass
 
     def _add_event_distance(self, voevent: VOEvent):
         """
