@@ -13,7 +13,7 @@ logging.basicConfig(**logging_kwargs)
 class VOEvent(object):
 
     def __init__(self):
-        self._client = GraceDb()
+        self.client = GraceDb()
         self._xml = None
         self._skymap_url = None
 
@@ -70,7 +70,7 @@ class VOEvent(object):
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
         for _child in self._xml.findall('.//Param'):
-             if _child.get('name') == 'skymap_fits':
+            if _child.get('name') == 'skymap_fits':
                 self._skymap_url = _child.get('value')
                 break
         else:
@@ -93,16 +93,12 @@ class VOEvent(object):
         -------
         None
         """
-        # TODO use client.voevents(event_id)
-        all_event_files = self._client.files(event_id).json()
+        voevents = self.client.voevents(event_id).json()['voevents']
+        voevents.sort(key=lambda x: x['N'], reverse=True)
 
-        voevent_filter =  lambda x: (event_id in x) and (x[-4:] == '.xml')
-        voevents = list(filter(voevent_filter, all_event_files))
+        url = voevents[0]['links']['file']
+        voevent_xml = self.client.get(url)
 
-        sort_key = lambda x: int(x.split('-')[1])
-        most_recent_voevent = sorted(voevents, key=sort_key, reverse=True)[0]
-
-        voevent_xml = self._client.get(all_event_files[most_recent_voevent])
         self._xml = ElementTree.parse(voevent_xml).getroot()
 
     def from_string(self, string: str):
