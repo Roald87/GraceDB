@@ -2,3 +2,7 @@ config.py
 *.pyc
 *.png
 LICENSE.md
+subscribers.txt
+wily*
+*.xml
+.idea/
