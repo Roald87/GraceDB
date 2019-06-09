@@ -2,6 +2,7 @@ import logging
 from xml.etree import ElementTree
 
 from astropy.io import fits
+from ligo.gracedb.exceptions import HTTPError
 from ligo.gracedb.rest import GraceDb
 
 from config import logging_kwargs
@@ -96,10 +97,21 @@ class VOEvent(object):
         voevents = self.client.voevents(event_id).json()['voevents']
         voevents.sort(key=lambda x: x['N'], reverse=True)
 
-        url = voevents[0]['links']['file']
-        voevent_xml = self.client.get(url)
-
-        self._xml = ElementTree.parse(voevent_xml).getroot()
+        # For event S190517h the file 'S190517h-3-Initial.xml' was in the
+        # voevent filelist. However, this file doesn't exist. Therefore looping
+        # over all until a existing file is found.
+        for voevent in voevents:
+            url = voevent['links']['file']
+            try:
+                voevent_xml = self.client.get(url)
+                self._xml = ElementTree.parse(voevent_xml).getroot()
+                break
+            except HTTPError:
+                if voevent['N'] == 1:
+                    logging.error(f"Can't find VOEvent for event {event_id}")
+                    raise HTTPError
+                else:
+                    logging.warning(f"Failed to get voevent from {url}")
 
     def from_string(self, string: str):
         self._xml = ElementTree.ElementTree(ElementTree.fromstring(string)).getroot()
