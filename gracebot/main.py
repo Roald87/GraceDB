@@ -4,8 +4,14 @@ from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, logging_kwargs, secret
-from config import preliminary_command, retraction_command, update_command
+from config import (
+    API_TOKEN,
+    logging_kwargs,
+    preliminary_command,
+    retraction_command,
+    secret,
+    update_command,
+)
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 

@@ -65,7 +65,6 @@ def fake_telegram_update(command: str):
 if __name__ == "__main__":
     test_events_to_send = [
         listener.test_send_preliminairy,
-        listener.test_send_initial,
         listener.test_send_update,
         listener.test_send_retraction,
     ]

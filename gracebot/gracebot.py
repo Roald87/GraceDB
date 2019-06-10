@@ -11,7 +11,7 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
-        self.subscribers = PermanentSet("subscribers.txt")
+        self.subscribers = PermanentSet("gracebot/subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
@@ -35,44 +35,39 @@ class GraceBot(Bot):
         self.events.update_all_events()
 
         text = f"A new event has been measured!"
-
-        for user_id in self.subscribers.data:
-            message.chat.id = user_id
-            await self.send_message(message.chat.id, text)
-            await self.send_latest(message)
+        event_id = list(self.events.events.keys())[0]
+        await self._send_event_info_to_all_users(event_id, text)
 
     async def send_update(self, message):
-        _event_id = event_id_from_message(message)
-        self.events.update_single_event(_event_id)
+        event_id = event_id_from_message(message)
+        self.events.update_single_event(event_id)
 
-        text = f"Event {_event_id} has been updated."
-
-        for user_id in self.subscribers.data:
-            message.chat.id = user_id
-            await self.send_message(message.chat.id, text)
-            await self.send_event_info(message, _event_id)
+        text = f"Event {event_id} has been updated."
+        await self._send_event_info_to_all_users(event_id, text)
 
     async def send_retraction(self, message):
-        _event_id = event_id_from_message(message)
-        text = f"Event {_event_id} has been retracted. " f"The event details were:"
+        event_id = event_id_from_message(message)
+        text = f"Event {event_id} has been retracted. The event details were:"
 
-        for user_id in self.subscribers.data:
-            message.chat.id = user_id
-            await self.send_message(message.chat.id, text)
-            await self.send_event_info(message, _event_id)
+        await self._send_event_info_to_all_users(event_id, text)
 
         self.events.update_all_events()
 
-    async def send_event_info(self, message: types.Message, event_id: str) -> None:
+    async def _send_event_info_to_all_users(self, event_id:str, text:str) -> None:
+        for user_id in self.subscribers.data:
+            await self.send_message(user_id, text)
+            await self.send_event_info(user_id, event_id)
+
+    async def send_event_info(self, chat_id: str, event_id: str) -> None:
         """
         Send information of a specific event to the user.
 
         Parameters
         ----------
-        message : aiogram.types.Message
-            The message send by the user.
+        chat_id : chat_id
+            Where to send the message to.
         event_id : str
-            Send information about this event to the user.
+            The event to send the information about.
 
         Returns
         -------
@@ -97,11 +92,11 @@ class GraceBot(Bot):
         except KeyError:
             pass
 
-        await self.send_message(message.chat.id, text, parse_mode="markdown")
+        await self.send_message(chat_id, text, parse_mode="markdown")
 
         try:
             with open(self.events.picture(event_id), "rb") as picture:
-                await self.send_photo(message.chat.id, picture)
+                await self.send_photo(chat_id, picture)
         except FileNotFoundError:
             logging.error("Couldn't find the event image")
             return None
