@@ -1,7 +1,7 @@
 import sys
 
 
-def progress_bar(count: int, total: int, prefix: str = '') -> None:
+def progress_bar(count: int, total: int, prefix: str = "") -> None:
     """
     Display a progress bar in the terminal.
 
@@ -27,9 +27,9 @@ def progress_bar(count: int, total: int, prefix: str = '') -> None:
     filled_len = int(round(bar_len * count / float(total)))
 
     percents = round(100.0 * count / float(total))
-    bar = '=' * filled_len + ' ' * (bar_len - filled_len)
+    bar = "=" * filled_len + " " * (bar_len - filled_len)
 
-    sys.stdout.write(f'\r{prefix}: [{bar}] {percents}%')
+    sys.stdout.write(f"\r{prefix}: [{bar}] {percents}%")
     sys.stdout.flush()
 
 

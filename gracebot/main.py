@@ -15,29 +15,30 @@ bot = GraceBot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
     await bot.send_welcome_message(message)
 
 
-@dp.message_handler(commands=['latest'])
+@dp.message_handler(commands=["latest"])
 async def send_latest_event(message: types.Message):
     await bot.send_latest(message)
 
 
-@dp.message_handler(commands=['stats'])
+@dp.message_handler(commands=["stats"])
 async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
 
 
-@dp.message_handler(commands=['subscribe'])
+@dp.message_handler(commands=["subscribe"])
 async def add_subscriber(message: types.Message):
     await bot.add_subscriber(message)
 
 
-@dp.message_handler(commands=['unsubscribe'])
+@dp.message_handler(commands=["unsubscribe"])
 async def remove_subscriber(message: types.Message):
     await bot.remove_subscriber(message)
+
 
 @dp.message_handler(commands=[preliminary_command])
 async def send_preliminary(message: types.Message):
@@ -55,19 +56,19 @@ async def send_retraction(message: types.Message):
 
 
 async def on_startup(dp):
-    webhook_url = f'{get_ngrok_url()}/{secret}'
+    webhook_url = f"{get_ngrok_url()}/{secret}"
     await bot.set_webhook(webhook_url)
 
 
-if __name__ == '__main__':
-    webapp_host = 'localhost'
+if __name__ == "__main__":
+    webapp_host = "localhost"
     webapp_port = get_port()
 
     start_webhook(
         dispatcher=dp,
-        webhook_path=f'/{secret}',
+        webhook_path=f"/{secret}",
         on_startup=on_startup,
         skip_updates=True,
         host=webapp_host,
-        port=webapp_port
+        port=webapp_port,
     )

@@ -25,11 +25,11 @@ def _get_ngrok_tunnel() -> str:
         logging.warning("Can't find ngrok tunnel. Make sure it's running.")
         return None
 
-    res_unicode = res.content.decode('utf-8')
+    res_unicode = res.content.decode("utf-8")
     res_json = json.loads(res_unicode)
 
-    for tunnel in res_json['tunnels']:
-        if 'ngrok' in tunnel['public_url']:
+    for tunnel in res_json["tunnels"]:
+        if "ngrok" in tunnel["public_url"]:
             return tunnel
 
 
@@ -44,7 +44,8 @@ def get_ngrok_url():
     """
     tunnel = _get_ngrok_tunnel()
 
-    return tunnel['public_url']
+    return tunnel["public_url"]
+
 
 def get_port():
     """
@@ -56,7 +57,7 @@ def get_port():
         Port number of the ngrok tunnel.
     """
     tunnel = _get_ngrok_tunnel()
-    local_address = tunnel['config']['addr']
-    port = int(local_address.split(':')[-1])
+    local_address = tunnel["config"]["addr"]
+    port = int(local_address.split(":")[-1])
 
     return port

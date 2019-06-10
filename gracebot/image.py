@@ -17,15 +17,17 @@ class ImageFromUrl(object):
 
     def __init__(self, url: str, border: int = 5):
         self.url = url
-        self.event_id = self.url.split('/')[-3]
+        self.event_id = self.url.split("/")[-3]
         self.filename = self.get_filename()
 
-        self.dir = f'gracebot/img/{self.event_id}'
+        self.dir = f"gracebot/img/{self.event_id}"
         create_dir(self.dir)
 
-        self._path = f'{self.dir}/{self.filename}'
+        self._path = f"{self.dir}/{self.filename}"
         if not os.path.isfile(self._path):
-            logging.info(f"Getting event image, because no image was found at {self._path}.")
+            logging.info(
+                f"Getting event image, because no image was found at {self._path}."
+            )
             self.img = self.from_url()
             self.reduce_whitespace(border)
             self.img.save(self.path)
@@ -50,11 +52,11 @@ class ImageFromUrl(object):
         str
             Converted filename.
         """
-        fname = self.url.split('/')[-1]
-        if ',' in fname:
-            _fname, _i = fname.split(',')
-            _name, _extension = _fname.split('.')
-            return _name + _i + '.' + _extension
+        fname = self.url.split("/")[-1]
+        if "," in fname:
+            _fname, _i = fname.split(",")
+            _name, _extension = _fname.split(".")
+            return _name + _i + "." + _extension
         else:
             return fname
 

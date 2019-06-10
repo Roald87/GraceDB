@@ -10,7 +10,7 @@ class PermanentSet(object):
     def read(self) -> set:
         data = set()
         try:
-            with open(self.fname, 'r') as f:
+            with open(self.fname, "r") as f:
                 data = {int(num) for num in f.readlines()}
         except IOError:
             pass
@@ -29,5 +29,5 @@ class PermanentSet(object):
         self._save_data()
 
     def _save_data(self):
-        with open(self.fname, 'w') as f:
-            f.write('\n'.join((str(num) for num in self.data)))
+        with open(self.fname, "w") as f:
+            f.write("\n".join((str(num) for num in self.data)))

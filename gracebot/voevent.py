@@ -12,7 +12,6 @@ logging.basicConfig(**logging_kwargs)
 
 
 class VOEvent(object):
-
     def __init__(self):
         self.client = GraceDb()
         self._xml = None
@@ -31,7 +30,7 @@ class VOEvent(object):
             self._get_skymap()
 
         with fits.open(self._skymap_url) as fit_data:
-            return mpc_to_mly(fit_data[1].header['DISTMEAN'])
+            return mpc_to_mly(fit_data[1].header["DISTMEAN"])
 
     @property
     def distance_std(self):
@@ -42,7 +41,7 @@ class VOEvent(object):
             self._get_skymap()
 
         with fits.open(self._skymap_url) as fit_data:
-            return mpc_to_mly(fit_data[1].header['DISTSTD'])
+            return mpc_to_mly(fit_data[1].header["DISTSTD"])
 
     @property
     def id(self) -> str:
@@ -51,28 +50,29 @@ class VOEvent(object):
         """
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
-        for _child in self._xml.findall('What/'):
-            if _child.get('name') == 'GraceID':
-                return _child.get('value')
+        for _child in self._xml.findall("What/"):
+            if _child.get("name") == "GraceID":
+                return _child.get("value")
 
     @property
     def p_astro(self) -> dict:
         _p_astro = dict().fromkeys(
-            ['BNS', 'NSBH', 'BBH', 'MassGap', 'Terrestrial'], 0.0)
+            ["BNS", "NSBH", "BBH", "MassGap", "Terrestrial"], 0.0
+        )
 
-        for _child in self._xml.findall('What/Group/'):
-            _name = _child.get('name')
+        for _child in self._xml.findall("What/Group/"):
+            _name = _child.get("name")
             if _name in _p_astro:
-                _p_astro[_name] = float(_child.get('value'))
+                _p_astro[_name] = float(_child.get("value"))
 
         return _p_astro
 
     def _get_skymap(self):
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
-        for _child in self._xml.findall('.//Param'):
-            if _child.get('name') == 'skymap_fits':
-                self._skymap_url = _child.get('value')
+        for _child in self._xml.findall(".//Param"):
+            if _child.get("name") == "skymap_fits":
+                self._skymap_url = _child.get("value")
                 break
         else:
             raise FileNotFoundError("Couldn't find a skymap URL.")
@@ -94,20 +94,20 @@ class VOEvent(object):
         -------
         None
         """
-        voevents = self.client.voevents(event_id).json()['voevents']
-        voevents.sort(key=lambda x: x['N'], reverse=True)
+        voevents = self.client.voevents(event_id).json()["voevents"]
+        voevents.sort(key=lambda x: x["N"], reverse=True)
 
         # For event S190517h the file 'S190517h-3-Initial.xml' was in the
         # voevent filelist. However, this file doesn't exist. Therefore looping
         # over all until a existing file is found.
         for voevent in voevents:
-            url = voevent['links']['file']
+            url = voevent["links"]["file"]
             try:
                 voevent_xml = self.client.get(url)
                 self._xml = ElementTree.parse(voevent_xml).getroot()
                 break
             except HTTPError:
-                if voevent['N'] == 1:
+                if voevent["N"] == 1:
                     logging.error(f"Can't find VOEvent for event {event_id}")
                     raise HTTPError
                 else:
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     event = VOEvent()
     # event.from_file('MS181101ab-1-Preliminary.xml')
     # event.from_file('MS181101ab-3-Update.xml')
-    event.from_event_id('S190521r')
+    event.from_event_id("S190521r")
 
     print(event.distance)
     print(event.distance_std)

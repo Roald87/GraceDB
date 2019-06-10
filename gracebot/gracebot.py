@@ -8,28 +8,27 @@ from permanentset import PermanentSet
 
 
 class GraceBot(Bot):
-
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
-        self.subscribers = PermanentSet('subscribers.txt')
+        self.subscribers = PermanentSet("subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
-            'BBH': 'binary black hole merger',
+            "BBH": "binary black hole merger",
             # Probability that the source is a binary neutron star merger
             # (both objects lighter than 3 solar masses)
-            'BNS': 'binary neutron star merger',
+            "BNS": "binary neutron star merger",
             # Probability that the source is a neutron star-black hole merger
             # (primary heavier than 5 solar masses, secondary lighter than 3
             # solar masses)
-            'NSBH': 'neutron star black hole merger',
+            "NSBH": "neutron star black hole merger",
             # Probability that the source is terrestrial(i.e., a background
             # noise fluctuation or a glitch)
-            'Terrestrial': 'terrestrial',
+            "Terrestrial": "terrestrial",
             # Probability that the source has at least one object between 3 and
             # 5 solar masses
-            'MassGap': 'mass gap',
+            "MassGap": "mass gap",
         }
 
     async def send_preliminary(self, message):
@@ -55,8 +54,7 @@ class GraceBot(Bot):
 
     async def send_retraction(self, message):
         _event_id = event_id_from_message(message)
-        text = f"Event {_event_id} has been retracted. " \
-            f"The event details were:"
+        text = f"Event {_event_id} has been retracted. " f"The event details were:"
 
         for user_id in self.subscribers.data:
             message.chat.id = user_id
@@ -82,25 +80,27 @@ class GraceBot(Bot):
         """
         event = self.events.events[event_id]
 
-        text = (
-            f'*{event_id.upper()}*\n'
-            f'{time_ago(event["created"])}\n\n')
+        text = f"*{event_id.upper()}*\n" f'{time_ago(event["created"])}\n\n'
 
         try:
             event_type = self.events.get_likely_event_type(event_id)
-            confidence = self.events.events[event_id]['event_types'][event_type]
-            text += f'Unconfirmed {self.event_types[event_type]} ({confidence:.2%}) event.'
+            confidence = self.events.events[event_id]["event_types"][event_type]
+            text += (
+                f"Unconfirmed {self.event_types[event_type]} ({confidence:.2%}) event."
+            )
 
             distance_mean = round(event["distance_mean_Mly"] / 1000, 2)
             distance_std = round(event["distance_std_Mly"] / 1000, 2)
-            text = text[:-1] + f' at {distance_mean} ± {distance_std} billion light years.'
+            text = (
+                text[:-1] + f" at {distance_mean} ± {distance_std} billion light years."
+            )
         except KeyError:
             pass
 
-        await self.send_message(message.chat.id, text, parse_mode='markdown')
+        await self.send_message(message.chat.id, text, parse_mode="markdown")
 
         try:
-            with open(self.events.picture(event_id), 'rb') as picture:
+            with open(self.events.picture(event_id), "rb") as picture:
                 await self.send_photo(message.chat.id, picture)
         except FileNotFoundError:
             logging.error("Couldn't find the event image")
@@ -120,9 +120,10 @@ class GraceBot(Bot):
         None.
         """
         text = (
-            'Get information on LIGO/Virgo gravitational wave events.\n\n'
-            'Use /latest to see the latest event, or see an overview of all '
-            'O3 events with /stats.')
+            "Get information on LIGO/Virgo gravitational wave events.\n\n"
+            "Use /latest to see the latest event, or see an overview of all "
+            "O3 events with /stats."
+        )
 
         await self.send_message(message.chat.id, text)
 
@@ -159,15 +160,15 @@ class GraceBot(Bot):
         # TODO take confirmed from other source since it will not be updated
         # in graceDB if they are confirmed. For that use:
         # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
-        event_counter = Counter([
-            _info['most_likely']
-            for _info in self.events.events.values()])
+        event_counter = Counter(
+            [_info["most_likely"] for _info in self.events.events.values()]
+        )
 
-        unconfirmed_bbh = event_counter['BBH']
-        unconfirmed_bns = event_counter['BNS']
-        unconfirmed_nsbh = event_counter['NSBH']
-        unconfirmed_mg = event_counter['MassGap']
-        terrestrial = event_counter['Terrestrial']
+        unconfirmed_bbh = event_counter["BBH"]
+        unconfirmed_bns = event_counter["BNS"]
+        unconfirmed_nsbh = event_counter["NSBH"]
+        unconfirmed_mg = event_counter["MassGap"]
+        terrestrial = event_counter["Terrestrial"]
 
         text = (
             f"Observational run 3 has detected *{len(self.events.events)}* "
@@ -181,7 +182,7 @@ class GraceBot(Bot):
             f"Likely terrestrial: {terrestrial}.\n"
         )
 
-        await self.send_message(message.chat.id, text, parse_mode='markdown')
+        await self.send_message(message.chat.id, text, parse_mode="markdown")
 
     async def add_subscriber(self, message: types.Message):
         _user_id = message.chat.id
@@ -190,8 +191,7 @@ class GraceBot(Bot):
         else:
             self.subscribers.add(message.chat.id)
             await self.send_message(
-                _user_id,
-                "You will now receive the latest event updates."
+                _user_id, "You will now receive the latest event updates."
             )
 
     async def remove_subscriber(self, message: types.Message):
@@ -201,9 +201,9 @@ class GraceBot(Bot):
         else:
             self.subscribers.remove(message.chat.id)
             await self.send_message(
-                _user_id,
-                "You will no longer receive the latest event updates."
+                _user_id, "You will no longer receive the latest event updates."
             )
+
 
 def event_id_from_message(message: types.Message) -> str:
     """
@@ -219,7 +219,7 @@ def event_id_from_message(message: types.Message) -> str:
     The event id.
     """
     try:
-        _event_id = message.text.split(' ')[-1]
+        _event_id = message.text.split(" ")[-1]
     except KeyError:
         _event_id = None
 

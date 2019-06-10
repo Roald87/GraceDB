@@ -35,14 +35,14 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
-        _events = self.client.superevents(query='Production', orderby=['-created'])
+        _events = self.client.superevents(query="Production", orderby=["-created"])
         _events = list(_events)
 
         self.events = {}
         total_events = len(_events)
         for i, _event in enumerate(_events):
             progress_bar(i, total_events, "Updating events")
-            self.update_single_event(_event['superevent_id'])
+            self.update_single_event(_event["superevent_id"])
 
     def update_single_event(self, event_id: str):
         """
@@ -59,11 +59,11 @@ class Events(object):
         _event = _event.json()
 
         # ADVNO = advocate says event is not ok.
-        if 'ADVNO' in _event['labels']:
+        if "ADVNO" in _event["labels"]:
             return
         else:
-            _event_id = _event.pop('superevent_id')
-            _event['created'] = dateutil.parser.parse(_event['created'])
+            _event_id = _event.pop("superevent_id")
+            _event["created"] = dateutil.parser.parse(_event["created"])
             self.events[_event_id] = _event
 
             voevent = VOEvent()
@@ -86,8 +86,8 @@ class Events(object):
         -------
         None
         """
-        self.events[voevent.id]['distance_mean_Mly'] = voevent.distance
-        self.events[voevent.id]['distance_std_Mly'] = voevent.distance_std
+        self.events[voevent.id]["distance_mean_Mly"] = voevent.distance
+        self.events[voevent.id]["distance_std_Mly"] = voevent.distance_std
 
     def _add_event_classification(self, voevent: VOEvent):
         """
@@ -100,9 +100,8 @@ class Events(object):
         -------
         None
         """
-        self.events[voevent.id]['event_types'] = voevent.p_astro
-        self.events[voevent.id]['most_likely'] = \
-            self.get_likely_event_type(voevent.id)
+        self.events[voevent.id]["event_types"] = voevent.p_astro
+        self.events[voevent.id]["most_likely"] = self.get_likely_event_type(voevent.id)
 
     async def _periodic_event_updater(self):
         """
@@ -134,9 +133,10 @@ class Events(object):
             Most likely event type.
         """
         try:
-            event_types = self.events[event_id]['event_types']
+            event_types = self.events[event_id]["event_types"]
             most_likely, _ = sorted(
-                event_types.items(), key=lambda value: value[1], reverse=True)[0]
+                event_types.items(), key=lambda value: value[1], reverse=True
+            )[0]
         except AttributeError:
             logging.error(f"Failed to get most likely event of {event_id}")
             return None
@@ -174,7 +174,7 @@ class Events(object):
             Local path of the image.
         """
         files = self.client.files(event_id).json()
-        link = get_latest_file_url(files, 'bayestar', '.png')
+        link = get_latest_file_url(files, "bayestar", ".png")
 
         if link is None:
             raise FileNotFoundError
@@ -202,10 +202,13 @@ def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> s
     str
         URL of the most recent file.
     """
-    filtered_files = {fname: link for fname, link in files.items()
-                      if (starts_with in fname[:len(starts_with)])
-                      and file_extension in fname
-                      and 'volume' not in fname}
+    filtered_files = {
+        fname: link
+        for fname, link in files.items()
+        if (starts_with in fname[: len(starts_with)])
+        and file_extension in fname
+        and "volume" not in fname
+    }
     newest_file = sorted(filtered_files.keys())[-1]
     link = files.get(newest_file, None)
 
@@ -230,6 +233,7 @@ def time_ago(dt: datetime.datetime) -> str:
 
     return timeago.format(dt, current_date)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     events = Events()
     events.update_all_events()
