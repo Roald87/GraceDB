@@ -50,29 +50,27 @@ class VOEvent(object):
         """
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
-        for _child in self._xml.findall("What/"):
-            if _child.get("name") == "GraceID":
-                return _child.get("value")
+        for child in self._xml.findall("What/"):
+            if child.get("name") == "GraceID":
+                return child.get("value")
 
     @property
     def p_astro(self) -> dict:
-        _p_astro = dict().fromkeys(
-            ["BNS", "NSBH", "BBH", "MassGap", "Terrestrial"], 0.0
-        )
+        p_astro = dict().fromkeys(["BNS", "NSBH", "BBH", "MassGap", "Terrestrial"], 0.0)
 
-        for _child in self._xml.findall("What/Group/"):
-            _name = _child.get("name")
-            if _name in _p_astro:
-                _p_astro[_name] = float(_child.get("value"))
+        for child in self._xml.findall("What/Group/"):
+            name = child.get("name")
+            if name in p_astro:
+                p_astro[name] = float(child.get("value"))
 
-        return _p_astro
+        return p_astro
 
     def _get_skymap(self):
         assert self._xml, "Load an xml file first using from_file or from_event_id!"
 
-        for _child in self._xml.findall(".//Param"):
-            if _child.get("name") == "skymap_fits":
-                self._skymap_url = _child.get("value")
+        for child in self._xml.findall(".//Param"):
+            if child.get("name") == "skymap_fits":
+                self._skymap_url = child.get("value")
                 break
         else:
             raise FileNotFoundError("Couldn't find a skymap URL.")

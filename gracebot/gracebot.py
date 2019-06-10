@@ -53,7 +53,7 @@ class GraceBot(Bot):
 
         self.events.update_all_events()
 
-    async def _send_event_info_to_all_users(self, event_id:str, text:str) -> None:
+    async def _send_event_info_to_all_users(self, event_id: str, text: str) -> None:
         for user_id in self.subscribers.data:
             await self.send_message(user_id, text)
             await self.send_event_info(user_id, event_id)
@@ -64,7 +64,7 @@ class GraceBot(Bot):
 
         Parameters
         ----------
-        chat_id : chat_id
+        chat_id : str
             Where to send the message to.
         event_id : str
             The event to send the information about.
@@ -135,9 +135,9 @@ class GraceBot(Bot):
         -------
         None.
         """
-        _event_id = list(self.events.latest)[0]
+        event_id = list(self.events.latest)[0]
 
-        await self.send_event_info(message, _event_id)
+        await self.send_event_info(message, event_id)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
@@ -156,7 +156,7 @@ class GraceBot(Bot):
         # in graceDB if they are confirmed. For that use:
         # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
         event_counter = Counter(
-            [_info["most_likely"] for _info in self.events.events.values()]
+            [info["most_likely"] for info in self.events.events.values()]
         )
 
         unconfirmed_bbh = event_counter["BBH"]
@@ -180,23 +180,47 @@ class GraceBot(Bot):
         await self.send_message(message.chat.id, text, parse_mode="markdown")
 
     async def add_subscriber(self, message: types.Message):
-        _user_id = message.chat.id
-        if self.subscribers.is_in_list(_user_id):
-            await self.send_message(_user_id, "You are already subscribed.")
+        """
+        Add the user from the message to the subscriber list.
+
+        Parameters
+        ----------
+        message : aiogram.types.Message
+            The message send by the user.
+
+        Returns
+        -------
+        None.
+        """
+        user_id = message.chat.id
+        if self.subscribers.is_in_list(user_id):
+            await self.send_message(user_id, "You are already subscribed.")
         else:
             self.subscribers.add(message.chat.id)
             await self.send_message(
-                _user_id, "You will now receive the latest event updates."
+                user_id, "You will now receive the latest event updates."
             )
 
     async def remove_subscriber(self, message: types.Message):
-        _user_id = message.chat.id
-        if not self.subscribers.is_in_list(_user_id):
-            await self.send_message(_user_id, "You are not subscribed.")
+        """
+        Remove the user from the message from the subscriber list.
+
+        Parameters
+        ----------
+        message : aiogram.types.Message
+            The message send by the user.
+
+        Returns
+        -------
+        None.
+        """
+        user_id = message.chat.id
+        if not self.subscribers.is_in_list(user_id):
+            await self.send_message(user_id, "You are not subscribed.")
         else:
             self.subscribers.remove(message.chat.id)
             await self.send_message(
-                _user_id, "You will no longer receive the latest event updates."
+                user_id, "You will no longer receive the latest event updates."
             )
 
 
@@ -214,8 +238,8 @@ def event_id_from_message(message: types.Message) -> str:
     The event id.
     """
     try:
-        _event_id = message.text.split(" ")[-1]
+        event_id = message.text.split(" ")[-1]
     except KeyError:
-        _event_id = None
+        event_id = None
 
-    return _event_id
+    return event_id

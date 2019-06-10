@@ -13,7 +13,7 @@ class PermanentSet(object):
             with open(self.fname, "r") as f:
                 data = {int(num) for num in f.readlines()}
         except IOError:
-            pass
+            logging.info("No users found in the filename!")
 
         return data
 

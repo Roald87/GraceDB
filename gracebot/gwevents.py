@@ -35,12 +35,12 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
-        _events = self.client.superevents(query="Production", orderby=["-created"])
-        _events = list(_events)
+        events = self.client.superevents(query="Production", orderby=["-created"])
+        events = list(events)
 
         self.events = {}
-        total_events = len(_events)
-        for i, _event in enumerate(_events):
+        total_events = len(events)
+        for i, _event in enumerate(events):
             progress_bar(i, total_events, "Updating events")
             self.update_single_event(_event["superevent_id"])
             if i > 2:
@@ -57,16 +57,16 @@ class Events(object):
         -------
 
         """
-        _event = self.client.superevent(event_id)
-        _event = _event.json()
+        event = self.client.superevent(event_id)
+        event = event.json()
 
         # ADVNO = advocate says event is not ok.
-        if "ADVNO" in _event["labels"]:
+        if "ADVNO" in event["labels"]:
             return
         else:
-            _event_id = _event.pop("superevent_id")
-            _event["created"] = dateutil.parser.parse(_event["created"])
-            self.events[_event_id] = _event
+            _event_id = event.pop("superevent_id")
+            event["created"] = dateutil.parser.parse(event["created"])
+            self.events[_event_id] = event
 
             voevent = VOEvent()
             try:
@@ -155,8 +155,8 @@ class Events(object):
         dict
             Latest event.
         """
-        for _id, _info in self.events.items():
-            return {_id: _info}
+        for id, info in self.events.items():
+            return {id: info}
 
     def picture(self, event_id: str) -> str:
         """
