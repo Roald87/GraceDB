@@ -19,7 +19,7 @@ class TestFromEventId(TestCase):
         assert self.voe.distance_std == approx(mpc_to_mly(279.257795), abs=1e-4)
 
     def test_id(self):
-        assert self.voe.id == "S190521r"
+        assert self.voe.id.lower() == "s190521r"
 
     def test_p_astro(self):
         expected = {
@@ -28,6 +28,32 @@ class TestFromEventId(TestCase):
             "BBH": 0.9993323440548098,
             "MassGap": 0.0,
             "Terrestrial": 0.0006676559451902493,
+        }
+
+        assert self.voe.p_astro == approx(expected, abs=1e-5)
+
+
+class TestFromFile(TestCase):
+    def setUp(self) -> None:
+        self.voe = VOEvent()
+        self.voe.from_file("./data/MS181101ab-1-Preliminary.xml")
+
+    def test_distance(self):
+        assert self.voe.distance == approx(mpc_to_mly(39.7699960), abs=1e-4)
+
+    def test_distance_std(self):
+        assert self.voe.distance_std == approx(mpc_to_mly(8.30843505), abs=1e-4)
+
+    def test_id(self):
+        assert self.voe.id.lower() == "s190602aq"
+
+    def test_p_astro(self):
+        expected = {
+            "BNS": 0.95,
+            "NSBH": 0.01,
+            "BBH": 0.03,
+            "MassGap": 0.0,
+            "Terrestrial": 0.01,
         }
 
         assert self.voe.p_astro == approx(expected, abs=1e-5)

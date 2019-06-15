@@ -14,69 +14,59 @@ logging.basicConfig(**logging_kwargs)
 class VOEvent(object):
     def __init__(self):
         self.client = GraceDb()
-        self._xml = None
-        self._skymap_url = None
-
-    @property
-    def xml(self) -> ElementTree.Element:
-        return self._xml
+        self._data = {}
+        self._distance = 0
+        self._distance_std = 0
 
     @property
     def distance(self):
         """
         Return distance of event in million light years.
         """
-        if not self._skymap_url:
-            self._get_skymap()
-
-        with fits.open(self._skymap_url) as fit_data:
-            return mpc_to_mly(fit_data[1].header["DISTMEAN"])
+        return self._distance
 
     @property
     def distance_std(self):
         """
         Return one sigma uncertainty in distance in million light years.
         """
-        if not self._skymap_url:
-            self._get_skymap()
-
-        with fits.open(self._skymap_url) as fit_data:
-            return mpc_to_mly(fit_data[1].header["DISTSTD"])
+        return self._distance_std
 
     @property
     def id(self) -> str:
         """
         Return event id.
         """
-        assert self._xml, "Load an xml file first using from_file or from_event_id!"
-
-        for child in self._xml.findall("What/"):
-            if child.get("name") == "GraceID":
-                return child.get("value")
+        return self._data["GraceID"]
 
     @property
     def p_astro(self) -> dict:
         p_astro = dict().fromkeys(["BNS", "NSBH", "BBH", "MassGap", "Terrestrial"], 0.0)
 
-        for child in self._xml.findall("What/Group/"):
-            name = child.get("name")
-            if name in p_astro:
-                p_astro[name] = float(child.get("value"))
+        for key in p_astro.keys():
+            try:
+                p_astro[key] = float(self._data[key])
+            except KeyError:
+                logging.warning(f"Couldn't find {key} in VOEent xml!")
+                pass
 
         return p_astro
 
-    def _get_skymap(self):
-        assert self._xml, "Load an xml file first using from_file or from_event_id!"
+    def _add_distance(self, url):
+        with fits.open(url) as fit_data:
+            self._distance = mpc_to_mly(fit_data[1].header["DISTMEAN"])
+            self._distance_std = mpc_to_mly(fit_data[1].header["DISTSTD"])
 
-        for child in self._xml.findall(".//Param"):
-            if child.get("name") == "skymap_fits":
-                self._skymap_url = child.get("value")
-                break
-        else:
-            raise FileNotFoundError("Couldn't find a skymap URL.")
+    def _xml_to_dict(self, root):
+        return {
+            elem.attrib["name"]: elem.attrib["value"]
+            for elem in root.iterfind(".//Param")
+        }
 
     def from_file(self, filename: str):
-        self._xml = ElementTree.parse(filename).getroot()
+        root = ElementTree.parse(filename).getroot()
+        self._data = self._xml_to_dict(root)
+        self._add_distance(self._data["skymap_fits"])
 
     def from_event_id(self, event_id: str):
         """
@@ -101,8 +91,9 @@ class VOEvent(object):
         for voevent in voevents:
             url = voevent["links"]["file"]
             try:
-                voevent_xml = self.client.get(url)
-                self._xml = ElementTree.parse(voevent_xml).getroot()
+                xml = self.client.get(url)
+                root = ElementTree.parse(xml).getroot()
+                self._data = self._xml_to_dict(root)
                 break
             except HTTPError:
                 if voevent["N"] == 1:
@@ -110,9 +101,7 @@ class VOEvent(object):
                     raise HTTPError
                 else:
                     logging.warning(f"Failed to get voevent from {url}")
-
-    def from_string(self, string: str):
-        self._xml = ElementTree.ElementTree(ElementTree.fromstring(string)).getroot()
+        self._add_distance(self._data["skymap_fits"])
 
 
 if __name__ == "__main__":
@@ -124,3 +113,5 @@ if __name__ == "__main__":
 
     print(event.distance)
     print(event.distance_std)
+    print(event.id)
+    print(event.p_astro)
