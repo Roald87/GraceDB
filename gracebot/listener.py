@@ -13,7 +13,7 @@ test_data = Path("tests/data/")
 
 # Function to call every time a GCN is received.
 # Run only for notices of type
-# LVC_PRELIMINARY, LVC_INITIAL, LVC_UPDATE or LVC_RETRACTION
+# LVC_PRELIMINARY, LVC_UPDATE or LVC_RETRACTION
 @gcn.handlers.include_notice_types(
     gcn.notice_types.LVC_PRELIMINARY,
     gcn.notice_types.LVC_UPDATE,
@@ -21,8 +21,8 @@ test_data = Path("tests/data/")
 )
 def process_gcn(payload, root):
 
-    # if root.attrib["role"] != "observation":
-    #     return
+    if root.attrib["role"] != "observation":
+        return
 
     params = {
         elem.attrib["name"]: elem.attrib["value"] for elem in root.iterfind(".//Param")
