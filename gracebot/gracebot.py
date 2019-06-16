@@ -139,7 +139,7 @@ class GraceBot(Bot):
         """
         event_id = list(self.events.latest)[0]
 
-        await self.send_event_info(message, event_id)
+        await self.send_event_info(message.chat.id, event_id)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
