@@ -119,7 +119,7 @@ class GraceBot(Bot):
         text = (
             "Get information on LIGO/Virgo gravitational wave events.\n\n"
             "Use /latest to see the latest event, or see an overview of all "
-            "O3 events with /stats."
+            "O3 events with /stats. You can also see the /status of all three detectors."
         )
 
         await self.send_message(message.chat.id, text)
