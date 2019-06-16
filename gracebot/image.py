@@ -4,9 +4,8 @@ from io import BytesIO
 from typing import List
 
 import numpy as np
-import PIL
 import requests
-from PIL import Image
+from PIL import Image, PngImagePlugin
 
 BoundingBox = List[int]
 
@@ -61,7 +60,7 @@ class ImageFromUrl(object):
         else:
             return fname
 
-    def from_url(self) -> PIL.PngImagePlugin.PngImageFile:
+    def from_url(self) -> PngImagePlugin.PngImageFile:
         """
         Loads image from url.
 
