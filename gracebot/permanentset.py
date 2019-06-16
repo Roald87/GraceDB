@@ -1,3 +1,6 @@
+import logging
+
+
 class PermanentSet(object):
     """
     Holds and saves a set of ints in a local text file.

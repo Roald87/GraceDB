@@ -2,7 +2,9 @@ import logging
 from collections import Counter
 
 from aiogram import Bot, types
+from aiogram.utils.emoji import emojize
 
+from detector import Detector
 from gwevents import Events, time_ago
 from permanentset import PermanentSet
 
@@ -11,7 +13,7 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
-        self.subscribers = PermanentSet("gracebot/subscribers.txt")
+        self.subscribers = PermanentSet("subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
@@ -178,6 +180,17 @@ class GraceBot(Bot):
         )
 
         await self.send_message(message.chat.id, text, parse_mode="markdown")
+
+    async def send_detector_status(self, message: types.Message):
+        detectors = [Detector("Hanford"), Detector("Livingston"), Detector("Virgo")]
+
+        text = "\n".join(
+            f"{emojize(d.status_icon)} {d.name}: {d.status} "
+            f"{d.duration.strftime('%Hh %Mm')}"
+            for d in detectors
+        )
+
+        await self.send_message(message.chat.id, text)
 
     async def add_subscriber(self, message: types.Message):
         """

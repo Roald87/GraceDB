@@ -36,6 +36,11 @@ async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
 
 
+@dp.message_handler(commands=["status"])
+async def send_o3_stats(message: types.Message):
+    await bot.send_detector_status(message)
+
+
 @dp.message_handler(commands=["subscribe"])
 async def add_subscriber(message: types.Message):
     await bot.add_subscriber(message)

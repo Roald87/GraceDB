@@ -5,9 +5,6 @@ from html.parser import HTMLParser
 import requests
 
 
-# statuses: Down, locking, observing, Troubleshooting, up, science
-
-
 class MyHTMLParser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
@@ -24,6 +21,7 @@ class Detector:
     name: str
     source: str = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
     status: str = ""
+    status_icon: str = ""
     duration: time = time(0)
 
     def __post_init__(self):
@@ -41,6 +39,20 @@ class Detector:
         )
 
         self.status = parser.data[detector_index + 1]
+
+        check_mark = ":white_check_mark:"
+        cross = ":x:"
+        construction = ":construction:"
+        status_mapper = {
+            "observing": check_mark,
+            "up": check_mark,
+            "science": check_mark,
+            "down": cross,
+            "maintenance": construction,
+            "locking": construction,
+            "troubleshooting": construction,
+        }
+        self.status_icon = status_mapper.get(self.status.lower(), ":question:")
 
         duration = parser.data[detector_index + 2]
         self.duration = time(*[int(num) for num in duration.split(":")])
