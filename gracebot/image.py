@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import List
 
 import numpy as np
+import PIL
 import requests
 from PIL import Image
 
@@ -15,7 +16,7 @@ class ImageFromUrl(object):
     Get an image from an URL and optionally crop it.
     """
 
-    def __init__(self, url: str, border: int = 5):
+    def __init__(self, url: str, border: int = 5) -> None:
         self.url = url
         self.event_id = self.url.split("/")[-3]
         self.filename = self.get_filename()
@@ -35,7 +36,7 @@ class ImageFromUrl(object):
             logging.info(f"Serving image from {self._path}")
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self._path
 
     def get_filename(self) -> str:
@@ -60,7 +61,7 @@ class ImageFromUrl(object):
         else:
             return fname
 
-    def from_url(self) -> Image:
+    def from_url(self) -> PIL.PngImagePlugin.PngImageFile:
         """
         Loads image from url.
 
@@ -78,7 +79,7 @@ class ImageFromUrl(object):
 
         return img
 
-    def reduce_whitespace(self, border: int = 5):
+    def reduce_whitespace(self, border: int = 5) -> None:
         """
         Reduce the amount of whitespace around an image.
 
@@ -103,7 +104,7 @@ class ImageFromUrl(object):
 
         pix = pix[:, :, 0:3]  # Drop the alpha channel
         idx = np.where(pix - 255)[0:2]  # Drop the color when finding edges
-        bbox = list(map(min, idx))[::-1] + list(map(max, idx))[::-1]
+        bbox = BoundingBox(map(min, idx))[::-1] + BoundingBox(map(max, idx))[::-1]
         larger_box = add_whitespace(bbox, border)
 
         self.img = self.img.crop(larger_box)
@@ -137,7 +138,7 @@ def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
     return larger_box
 
 
-def create_dir(directory):
+def create_dir(directory) -> None:
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)

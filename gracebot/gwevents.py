@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+from typing import Dict
 
 import dateutil.parser
 import timeago
@@ -120,7 +121,7 @@ class Events(object):
 
             await asyncio.sleep(delay=3600)
 
-    def get_likely_event_type(self, event_id: str) -> float:
+    def get_likely_event_type(self, event_id: str) -> str:
         """
         Return the most likely event type of a certain event.
 
@@ -131,7 +132,7 @@ class Events(object):
 
         Returns
         -------
-        tuple
+        str
             Most likely event type.
         """
         try:
@@ -141,12 +142,12 @@ class Events(object):
             )[0]
         except AttributeError:
             logging.error(f"Failed to get most likely event of {event_id}")
-            return None
+            return ""
 
         return most_likely
 
     @property
-    def latest(self) -> dict:
+    def latest(self) -> Dict[str, dict]:
         """
         Return the latest event from the Grace database.
 
@@ -157,6 +158,8 @@ class Events(object):
         """
         for id, info in self.events.items():
             return {id: info}
+
+        return {"": dict()}
 
     def picture(self, event_id: str) -> str:
         """

@@ -15,7 +15,7 @@ from config import (
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 
-logging.basicConfig(**logging_kwargs)
+logging.basicConfig(**logging_kwargs)  # type: ignore
 
 bot = GraceBot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -37,7 +37,7 @@ async def send_o3_stats(message: types.Message):
 
 
 @dp.message_handler(commands=["status"])
-async def send_o3_stats(message: types.Message):
+async def send_detector_status(message: types.Message):
     await bot.send_detector_status(message)
 
 
