@@ -38,12 +38,12 @@ class Detector:
 
         self.status = parser.data[detector_index + 1]
 
-        self.status_icon = self._get_status_icon(self.status)
+        self.status_icon = self._get_status_icon()
 
         duration = parser.data[detector_index + 2]
-        self.duration = time(*[int(num) for num in duration.split(":")])
+        self.duration = self._convert_to_time(duration)
 
-    def _get_status_icon(self, status: str) -> str:
+    def _get_status_icon(self) -> str:
         check_mark = ":white_check_mark:"
         cross = ":x:"
         construction = ":construction:"
@@ -51,6 +51,7 @@ class Detector:
             "observing": check_mark,
             "up": check_mark,
             "science": check_mark,
+            "not_locked": check_mark,
             "down": cross,
             "maintenance": construction,
             "locking": construction,
@@ -61,3 +62,10 @@ class Detector:
 
     def _remote_source(self) -> bool:
         return self.source.split(":")[0] == "https"
+
+    def _convert_to_time(self, time_string: str) -> time:
+        hours, minutes = time_string.split(":")
+        h = int(hours[1:]) if hours[0] == ">" else int(hours)
+        m = int(minutes)
+
+        return time(h, m)
