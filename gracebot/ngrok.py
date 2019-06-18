@@ -1,12 +1,13 @@
 import json
 import logging
+from typing import Optional
 
 import requests
 
 _url = "http://localhost:4040/api/tunnels/"
 
 
-def _get_ngrok_tunnel() -> str:
+def _get_ngrok_tunnel() -> Optional[str]:
     """
     Return the details of the ngrok tunnel or None if no tunnel is set up.
 
@@ -23,7 +24,6 @@ def _get_ngrok_tunnel() -> str:
         res = requests.get(_url)
     except requests.exceptions.ConnectionError:
         logging.warning("Can't find ngrok tunnel. Make sure it's running.")
-        return None
 
     res_unicode = res.content.decode("utf-8")
     res_json = json.loads(res_unicode)
@@ -31,6 +31,8 @@ def _get_ngrok_tunnel() -> str:
     for tunnel in res_json["tunnels"]:
         if "ngrok" in tunnel["public_url"]:
             return tunnel
+
+    return None
 
 
 def get_ngrok_url():

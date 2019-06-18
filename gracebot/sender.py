@@ -13,7 +13,7 @@ from config import (
 )
 from ngrok import get_ngrok_url
 
-logging.basicConfig(**logging_kwargs)
+logging.basicConfig(**logging_kwargs)  # type: ignore
 
 
 def post_preliminairy():

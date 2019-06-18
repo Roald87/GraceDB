@@ -6,12 +6,12 @@ class PermanentSet(object):
     Holds and saves a set of ints in a local text file.
     """
 
-    def __init__(self, fname):
+    def __init__(self, fname: str):
         self.fname = fname
         self.data = self.read()
 
     def read(self) -> set:
-        data = set()
+        data: set = set()
         try:
             with open(self.fname, "r") as f:
                 data = {int(num) for num in f.readlines()}

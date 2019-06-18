@@ -4,6 +4,7 @@ from unittest import TestCase
 from detector import Detector
 
 source = "./data/detector_status.html"
+source2 = "./data/detector_status2.html"
 
 
 class TestHanford(TestCase):
@@ -46,3 +47,17 @@ class TestVirgo(TestCase):
 
     def test_duration(self):
         assert self.virgo.duration == time(0, 10)
+
+
+class TestHanford2(TestCase):
+    def setUp(self):
+        self.hanford = Detector("Hanford", source=source2)
+
+    def test_name(self):
+        assert self.hanford.name == "Hanford"
+
+    def test_status(self):
+        assert self.hanford.status == "Down"
+
+    def test_duration(self):
+        assert self.hanford.duration == time(5, 37)

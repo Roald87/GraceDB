@@ -7,7 +7,7 @@ import lxml.etree
 import sender
 from config import logging_kwargs
 
-logging.basicConfig(**logging_kwargs)
+logging.basicConfig(**logging_kwargs)  # type: ignore
 
 test_data = Path("tests/data/")
 
