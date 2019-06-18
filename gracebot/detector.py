@@ -25,7 +25,7 @@ class Detector:
     duration: time = time(0)
 
     def __post_init__(self):
-        if self.source.split(":")[0] == "https":
+        if self._remote_source():
             text = requests.get(self.source).text
         else:
             with open(self.source, "r") as file:
@@ -34,12 +34,16 @@ class Detector:
         parser = MyHTMLParser()
         parser.feed(text)
 
-        detector_index = parser.data.index(
-            list(t for t in parser.data if self.name in t)[0]
-        )
+        detector_index = [i for i, t in enumerate(parser.data) if self.name in t][0]
 
         self.status = parser.data[detector_index + 1]
 
+        self.status_icon = self._get_status_icon(self.status)
+
+        duration = parser.data[detector_index + 2]
+        self.duration = time(*[int(num) for num in duration.split(":")])
+
+    def _get_status_icon(self, status: str) -> str:
         check_mark = ":white_check_mark:"
         cross = ":x:"
         construction = ":construction:"
@@ -52,7 +56,8 @@ class Detector:
             "locking": construction,
             "troubleshooting": construction,
         }
-        self.status_icon = status_mapper.get(self.status.lower(), ":question:")
 
-        duration = parser.data[detector_index + 2]
-        self.duration = time(*[int(num) for num in duration.split(":")])
+        return status_mapper.get(self.status.lower(), ":question:")
+
+    def _remote_source(self) -> bool:
+        return self.source.split(":")[0] == "https"
