@@ -1,13 +1,10 @@
 import logging
 import os
 from io import BytesIO
-from typing import List
 
 import numpy as np
 import requests
 from PIL import Image, PngImagePlugin
-
-BoundingBox = List[int]
 
 
 class ImageFromUrl(object):
@@ -103,21 +100,20 @@ class ImageFromUrl(object):
 
         pix = pix[:, :, 0:3]  # Drop the alpha channel
         idx = np.where(pix - 255)[0:2]  # Drop the color when finding edges
-        bbox = BoundingBox(map(min, idx))[::-1] + BoundingBox(map(max, idx))[::-1]
+        bbox = list(map(min, idx))[::-1] + list(map(max, idx))[::-1]
         larger_box = add_whitespace(bbox, border)
 
         self.img = self.img.crop(larger_box)
 
 
-def add_whitespace(bounding_box: BoundingBox, border: int = 5) -> BoundingBox:
+def add_whitespace(bounding_box: list, border: int = 5) -> list:
     """
     Add white space to an existing bounding box.
 
     Parameters
     ----------
-    bounding_box : BoundingBox
-        A list of length 4 with the corner coordinates of the cropped image
-        without whitespace.
+    bounding_box : list
+        Four corner coordinates of the cropped image without whitespace.
     border : int
         The amount of whitespace you want to add on all sides.
 
