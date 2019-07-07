@@ -89,7 +89,7 @@ class VOEvent(object):
         voevents.sort(key=lambda x: x["N"], reverse=True)
 
         # For event S190517h the file 'S190517h-3-Initial.xml' was in the
-        # voevent filelist. However, this file doesn't exist. Therefore looping
+        # voevent file list. However, this file doesn't exist. Therefore looping
         # over all until a existing file is found.
         for voevent in voevents:
             url = voevent["links"]["file"]
