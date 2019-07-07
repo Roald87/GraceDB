@@ -1,11 +1,12 @@
 import asyncio
 import datetime
 import logging
+import urllib.error
 from typing import Dict
 
 import dateutil.parser
+import ligo.gracedb.exceptions
 import timeago
-from ligo.gracedb.exceptions import HTTPError
 from ligo.gracedb.rest import GraceDb
 
 from functions import progress_bar
@@ -56,23 +57,34 @@ class Events(object):
         -------
 
         """
-        event = self.client.superevent(event_id)
-        event = event.json()
+        # Make sure the event id has the right upper and lower case format
+        _event_id = event_id[0].upper() + event_id[1:].lower()
+
+        try:
+            event = self.client.superevent(_event_id)
+            event = event.json()
+        except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
+            logging.error(f"Could not find event {_event_id}. Exception: {e}")
+            return
 
         # ADVNO = advocate says event is not ok.
         if "ADVNO" in event["labels"]:
             return
         else:
-            _event_id = event.pop("superevent_id")
+            event.pop("superevent_id")
             event["created"] = dateutil.parser.parse(event["created"])
             self.events[_event_id] = event
 
             voevent = VOEvent()
             try:
-                voevent.from_event_id(event_id)
+                voevent.from_event_id(_event_id)
                 self._add_event_distance(voevent)
                 self._add_event_classification(voevent)
-            except HTTPError:
+            except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
+                logging.warning(
+                    f"Couldn't get info from VOEvent file with event id {_event_id}"
+                    f"Exception: {e}"
+                )
                 pass
 
     def _add_event_distance(self, voevent: VOEvent):
