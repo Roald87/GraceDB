@@ -64,8 +64,11 @@ class Detector:
         return self.source.split(":")[0] == "https"
 
     def _convert_to_time(self, time_string: str) -> time:
-        hours, minutes = time_string.split(":")
-        h = int(hours[1:]) if hours[0] == ">" else int(hours)
-        m = int(minutes)
+        try:
+            hours, minutes = time_string.split(":")
+            h = int(hours[1:]) if hours[0] == ">" else int(hours)
+            m = int(minutes)
+        except ValueError:
+            h, m = 0, 0
 
         return time(h, m)
