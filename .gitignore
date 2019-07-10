@@ -6,3 +6,4 @@ subscribers.txt
 wily*
 *.xml
 .idea/
+*.out
