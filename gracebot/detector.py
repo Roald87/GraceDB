@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import time
 from html.parser import HTMLParser
@@ -61,7 +62,11 @@ class Detector:
             "calibration": construction,
         }
 
-        return status_mapper.get(self.status.lower(), ":question:")
+        status_icon = status_mapper.get(self.status.lower(), ":question:")
+        if status_icon == ":question:":
+            logging.warning(f"Unknown status {self.status}")
+
+        return status_icon
 
     def _remote_source(self) -> bool:
         return self.source.split(":")[0] == "https"
@@ -72,6 +77,7 @@ class Detector:
             h = int(hours[1:]) if hours[0] == ">" else int(hours)
             m = int(minutes)
         except ValueError:
+            logging.error(f"Could not convert the string '{time_string}' to a time.")
             h, m = 0, 0
 
         return time(h, m)
