@@ -63,6 +63,20 @@ class TestHanford2(TestCase):
         assert self.hanford.duration == time(5, 37)
 
 
+class TestReplacingUnderscoreInStateWithSpace(TestCase):
+    def setUp(self):
+        self.detector = Detector("Livingston", source=source2)
+
+    def test_name(self):
+        assert self.detector.name == "Livingston"
+
+    def test_status(self):
+        assert self.detector.status == "Not locked"
+
+    def test_duration(self):
+        assert self.detector.duration == time(5, 37)
+
+
 class TestWithoutTime(TestCase):
     def setUp(self):
         self.detector = Detector("Virgo", source="./data/detector_status_no_time.html")

@@ -36,7 +36,8 @@ class Detector:
 
         detector_index = [i for i, t in enumerate(parser.data) if self.name in t][0]
 
-        self.status = parser.data[detector_index + 1]
+        status_raw = parser.data[detector_index + 1]
+        self.status = status_raw.replace("_", " ").lower().capitalize()
 
         self.status_icon = self._get_status_icon()
 
@@ -51,11 +52,13 @@ class Detector:
             "observing": check_mark,
             "up": check_mark,
             "science": check_mark,
-            "not_locked": check_mark,
+            "not locked": cross,
             "down": cross,
+            "info too old": cross,
             "maintenance": construction,
             "locking": construction,
             "troubleshooting": construction,
+            "calibration": construction,
         }
 
         return status_mapper.get(self.status.lower(), ":question:")
