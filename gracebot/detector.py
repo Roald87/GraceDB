@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import time
+from datetime import timedelta
 from html.parser import HTMLParser
 
 import requests
@@ -23,7 +23,7 @@ class Detector:
     source: str = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
     status: str = ""
     status_icon: str = ""
-    duration: time = time(0)
+    duration: timedelta = timedelta(0)
 
     def __post_init__(self):
         if self._remote_source():
@@ -71,7 +71,7 @@ class Detector:
     def _remote_source(self) -> bool:
         return self.source.split(":")[0] == "https"
 
-    def _convert_to_time(self, time_string: str) -> time:
+    def _convert_to_time(self, time_string: str) -> timedelta:
         try:
             hours, minutes = time_string.split(":")
             h = int(hours[1:]) if hours[0] == ">" else int(hours)
@@ -80,4 +80,4 @@ class Detector:
             logging.error(f"Could not convert the string '{time_string}' to a time.")
             h, m = 0, 0
 
-        return time(h, m)
+        return timedelta(hours=h, minutes=m)

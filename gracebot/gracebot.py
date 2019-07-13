@@ -190,11 +190,16 @@ class GraceBot(Bot):
     async def send_detector_status(self, message: types.Message):
         detectors = [Detector("Hanford"), Detector("Livingston"), Detector("Virgo")]
 
-        text = "\n".join(
-            f"{emojize(d.status_icon)} {d.name}: {d.status} "
-            f"{d.duration.strftime('%Hh %Mm')}"
-            for d in detectors
-        )
+        detector_status = []
+        for detector in detectors:
+            hours = detector.duration.days * 24 + (detector.duration.seconds // 3600)
+            minutes = (detector.duration.seconds % 3600) // 60
+
+            detector_status.append(
+                f"{emojize(detector.status_icon)} {detector.name}: "
+                f"{detector.status} {hours}h {minutes}m"
+            )
+        text = "\n".join(detector_status)
 
         await self.send_message(message.chat.id, text)
 
