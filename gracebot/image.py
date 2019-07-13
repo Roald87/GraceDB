@@ -52,7 +52,9 @@ class ImageFromUrl(object):
         fname = self.url.split("/")[-1]
         if "," in fname:
             _fname, _i = fname.split(",")
-            _name, _extension = _fname.split(".")
+            _split_fname = _fname.split(".")
+            _name = _split_fname[0]
+            _extension = _split_fname[-1]
             return _name + _i + "." + _extension
         else:
             return fname

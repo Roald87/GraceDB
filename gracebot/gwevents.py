@@ -48,10 +48,11 @@ class Events(object):
 
     def update_single_event(self, event_id: str):
         """
+        Update and store the data of a single event in the event dictionary.
 
         Parameters
         ----------
-        event_id
+        event_id : str
 
         Returns
         -------
@@ -175,8 +176,7 @@ class Events(object):
         """
         Return local path of an image from a specific event.
 
-        Currently takes the bayestar.png image. Maybe changes in the future
-        when more images come available.
+        Image priority is as follows: 1) LALInference 2) skymap 3) bayestar.png.
 
         Parameters
         ----------
@@ -189,7 +189,11 @@ class Events(object):
             Local path of the image.
         """
         files = self.client.files(event_id).json()
-        link = get_latest_file_url(files, "bayestar", ".png")
+
+        for fname in ["LALInference", "skymap", "bayestar"]:
+            link = get_latest_file_url(files, "LALInference", ".png")
+            if link:
+                break
 
         if link is None:
             raise FileNotFoundError
