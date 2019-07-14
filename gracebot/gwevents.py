@@ -191,7 +191,7 @@ class Events(object):
         files = self.client.files(event_id).json()
 
         for fname in ["LALInference", "skymap", "bayestar"]:
-            link = get_latest_file_url(files, "LALInference", ".png")
+            link = get_latest_file_url(files, fname, ".png")
             if link:
                 break
 
