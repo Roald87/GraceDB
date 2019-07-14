@@ -195,7 +195,7 @@ class Events(object):
             if link:
                 break
 
-        if link is None:
+        if len(link) == 0:
             raise FileNotFoundError
         else:
             img = ImageFromUrl(link)
@@ -229,7 +229,7 @@ def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> s
         and "volume" not in fname
     }
     newest_file = sorted(filtered_files.keys())[-1]
-    link = files.get(newest_file, None)
+    link = files.get(newest_file, "")
 
     return link
 
