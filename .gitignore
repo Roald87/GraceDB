@@ -3,7 +3,9 @@ config.py
 *.png
 LICENSE.md
 subscribers.txt
+subscribed.txt
 wily*
 *.xml
 .idea/
 *.out
+wily_reporter.sh
