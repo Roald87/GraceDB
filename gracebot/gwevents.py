@@ -251,8 +251,3 @@ def time_ago(dt: datetime.datetime) -> str:
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
     return timeago.format(dt, current_date)
-
-
-if __name__ == "__main__":
-    events = Events()
-    events.update_all_events()

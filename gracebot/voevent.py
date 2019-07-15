@@ -105,16 +105,3 @@ class VOEvent(object):
                 else:
                     logging.warning(f"Failed to get voevent from {url}")
         self._add_distance(self._data["skymap_fits"])
-
-
-if __name__ == "__main__":
-    # For testing purposes
-    event = VOEvent()
-    # event.from_file('MS181101ab-1-Preliminary.xml')
-    # event.from_file('MS181101ab-3-Update.xml')
-    event.from_event_id("S190521r")
-
-    print(event.distance)
-    print(event.distance_std)
-    print(event.id)
-    print(event.p_astro)

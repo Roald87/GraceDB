@@ -1,9 +1,7 @@
 import logging
-import time
 
 import requests
 
-import listener
 from config import (
     logging_kwargs,
     preliminary_command,
@@ -60,15 +58,3 @@ def fake_telegram_update(command: str):
     }
 
     return update_json
-
-
-if __name__ == "__main__":
-    test_events_to_send = [
-        listener.test_send_preliminairy,
-        listener.test_send_update,
-        listener.test_send_retraction,
-    ]
-
-    for event in test_events_to_send:
-        event()
-        time.sleep(5)
