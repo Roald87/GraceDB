@@ -45,6 +45,8 @@ class Events(object):
         for i, _event in enumerate(events):
             progress_bar(i, total_events, "Updating events")
             self.update_single_event(_event["superevent_id"])
+            if i > 5:
+                break
 
     def update_single_event(self, event_id: str):
         """
@@ -127,10 +129,10 @@ class Events(object):
 
         """
         while True:
+            await asyncio.sleep(delay=36000)
+
             logging.info("Refreshing event database.")
             self.update_all_events()
-
-            await asyncio.sleep(delay=36000)
 
     def get_likely_event_type(self, event_id: str) -> str:
         """

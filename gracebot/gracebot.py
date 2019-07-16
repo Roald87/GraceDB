@@ -13,6 +13,7 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
+        self.events.update_all_events()
         self.subscribers = PermanentSet("subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
@@ -146,6 +147,40 @@ class GraceBot(Bot):
         event_id = list(self.events.latest)[0]
 
         await self.send_event_info(message.chat.id, event_id)
+
+    async def event_selector(self, message: types.Message) -> None:
+        """
+        User can select any event from the O3 run and get a message with the details.
+
+        Parameters
+        ----------
+        message : types.Message
+
+        Returns
+        -------
+        None
+        """
+        keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
+
+        for id, details in self.events.events.items():
+            keyboard_markup.add(types.InlineKeyboardButton(id, callback_data=id))
+
+        await message.reply(
+            "Select the event you want to see the details of.",
+            reply_markup=keyboard_markup,
+        )
+
+    async def event_callback_handler(self, query: types.CallbackQuery):
+        await query.answer()  # send answer to close the rounding circle
+
+        answer_data = query.data
+        logging.debug(f"answer_data={answer_data}")
+
+        all_event_ids = list(self.events.events.keys())
+        if answer_data in all_event_ids:
+            await self.send_event_info(query.from_user.id, answer_data)
+        else:
+            await self.send_message(query.from_user.id, "Choose other option.")
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """

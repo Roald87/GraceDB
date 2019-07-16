@@ -31,6 +31,19 @@ async def send_latest_event(message: types.Message):
     await bot.send_latest(message)
 
 
+@dp.message_handler(commands=["event"])
+async def send_event(message: types.Message):
+    await bot.event_selector(message)
+
+
+all_event_ids = list(bot.events.events.keys())
+
+
+@dp.callback_query_handler(lambda cb: cb.data in all_event_ids)
+async def inline_kb_answer_callback_handler(query: types.CallbackQuery):
+    await bot.event_callback_handler(query)
+
+
 @dp.message_handler(commands=["stats"])
 async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
