@@ -192,7 +192,7 @@ class Events(object):
 
         for fname in ["LALInference", "skymap", "bayestar"]:
             link = get_latest_file_url(files, fname, ".png")
-            if link:
+            if len(link) > 0:
                 break
 
         if len(link) == 0:
@@ -228,6 +228,9 @@ def get_latest_file_url(files: dict, starts_with: str, file_extension: str) -> s
         and file_extension in fname
         and "volume" not in fname
     }
+    if len(filtered_files) == 0:
+        return ""
+
     newest_file = sorted(filtered_files.keys())[-1]
     link = files.get(newest_file, "")
 
@@ -251,8 +254,3 @@ def time_ago(dt: datetime.datetime) -> str:
     current_date = datetime.datetime.now(datetime.timezone.utc)
 
     return timeago.format(dt, current_date)
-
-
-if __name__ == "__main__":
-    events = Events()
-    events.update_all_events()
