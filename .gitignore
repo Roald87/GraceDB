@@ -9,3 +9,4 @@ wily*
 .idea/
 *.out
 wily_reporter.sh
+*.json
