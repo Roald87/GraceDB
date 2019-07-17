@@ -3,6 +3,7 @@ from collections import Counter
 
 from aiogram import Bot, types
 from aiogram.utils.emoji import emojize
+from more_itertools import chunked
 
 from detector import Detector
 from gwevents import Events, time_ago
@@ -160,10 +161,17 @@ class GraceBot(Bot):
         -------
         None
         """
-        keyboard_markup = types.InlineKeyboardMarkup(row_width=3)
+        keyboard_markup = types.InlineKeyboardMarkup()
+        events = self.events.events
 
-        for id, details in self.events.events.items():
-            keyboard_markup.add(types.InlineKeyboardButton(id, callback_data=id))
+        for ids in chunked(events.keys(), 2):
+            row = []
+            for _id in ids:
+                event_type = events[_id]["most_likely"]
+                row.append(
+                    types.InlineKeyboardButton(f"{_id} {event_type}", callback_data=_id)
+                )
+            keyboard_markup.row(*row)
 
         await message.reply(
             "Select the event you want to see the details of.",
