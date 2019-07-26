@@ -16,6 +16,8 @@ class GraceBot(Bot):
         super(GraceBot, self).__init__(token=token)
         self.events = Events()
         self.events.update_all_events()
+        self.start_at = 0
+        self.increment = 2
         self.subscribers = PermanentSet("subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both
@@ -166,10 +168,21 @@ class GraceBot(Bot):
         -------
         None
         """
+        keyboard_markup = self.make_event_keyboard()
+
+        await message.reply(
+            "Select the event you want to see the details of.",
+            reply_markup=keyboard_markup,
+        )
+
+    def make_event_keyboard(self) -> types.InlineKeyboardMarkup:
         keyboard_markup = types.InlineKeyboardMarkup()
         events = self.events.events
 
-        for ids in chunked(events.keys(), 2):
+        event_ids = list(events.keys())
+        for ids in chunked(
+            event_ids[self.start_at : self.start_at + self.increment], 2
+        ):
             row = []
             for _id in ids:
                 event_type = events[_id]["most_likely"]
@@ -178,10 +191,18 @@ class GraceBot(Bot):
                 )
             keyboard_markup.row(*row)
 
-        await message.reply(
-            "Select the event you want to see the details of.",
-            reply_markup=keyboard_markup,
-        )
+        navigation_buttons = []
+        if self.start_at < len(events):
+            navigation_buttons.append(
+                types.InlineKeyboardButton("<<", callback_data="previous")
+            )
+        if self.start_at > 0:
+            navigation_buttons.append(
+                types.InlineKeyboardButton(">>", callback_data="next")
+            )
+        keyboard_markup.row(*navigation_buttons)
+
+        return keyboard_markup
 
     async def event_callback_handler(self, query: types.CallbackQuery):
         await query.answer()  # send answer to close the rounding circle
@@ -189,11 +210,29 @@ class GraceBot(Bot):
         answer_data = query.data
         logging.debug(f"answer_data={answer_data}")
 
-        all_event_ids = list(self.events.events.keys())
-        if answer_data in all_event_ids:
+        valid_event_ids = list(self.events.events.keys())
+        if answer_data in valid_event_ids:
             await self.send_event_info(query.from_user.id, answer_data)
-        else:
-            await self.send_message(query.from_user.id, "Choose other option.")
+        elif answer_data == "previous":
+            await self.show_older_events(query)
+        elif answer_data == "next":
+            await self.show_newer_events(query)
+
+    async def show_older_events(self, query):
+        self.start_at += self.increment
+
+        keyboard_markup = self.make_event_keyboard()
+
+        event_message = query.message
+        await event_message.edit_reply_markup(reply_markup=keyboard_markup)
+
+    async def show_newer_events(self, query):
+        self.start_at -= self.increment
+
+        keyboard_markup = self.make_event_keyboard()
+
+        event_message = query.message
+        await event_message.edit_reply_markup(reply_markup=keyboard_markup)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """

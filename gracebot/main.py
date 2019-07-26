@@ -44,6 +44,16 @@ async def inline_kb_answer_callback_handler(query: types.CallbackQuery):
     await bot.event_callback_handler(query)
 
 
+@dp.callback_query_handler(text="previous")
+async def show_older_events_callback_handler(query: types.CallbackQuery):
+    await bot.show_older_events(query)
+
+
+@dp.callback_query_handler(text="next")
+async def show_newer_events_callback_handler(query: types.CallbackQuery):
+    await bot.show_newer_events(query)
+
+
 @dp.message_handler(commands=["stats"])
 async def send_o3_stats(message: types.Message):
     await bot.send_o3_stats(message)
