@@ -170,8 +170,9 @@ class GraceBot(Bot):
         """
         keyboard_markup = self.make_event_keyboard()
 
-        await message.reply(
-            "Select the event you want to see the details of.",
+        await self.send_message(
+            chat_id=message.chat.id,
+            text="Select the event you want to see the details of.",
             reply_markup=keyboard_markup,
         )
 
