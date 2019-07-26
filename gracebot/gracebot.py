@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
 
+import aiogram
 from aiogram import Bot, types
 from aiogram.utils.emoji import emojize
 from more_itertools import chunked
@@ -59,8 +60,12 @@ class GraceBot(Bot):
 
     async def _send_event_info_to_all_users(self, event_id: str, text: str) -> None:
         for user_id in self.subscribers.data:
-            await self.send_message(user_id, text)
-            await self.send_event_info(user_id, event_id)
+            try:
+                await self.send_message(user_id, text)
+                await self.send_event_info(user_id, event_id)
+            except aiogram.utils.exceptions.BotBlocked:
+                logging.info(f"User {user_id} has blocked the bot.")
+                continue
 
     async def send_event_info(self, chat_id: str, event_id: str) -> None:
         """
