@@ -168,7 +168,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        keyboard_markup = self.make_event_keyboard()
+        keyboard_markup = self._make_event_selecter_keyboard()
 
         await self.send_message(
             chat_id=message.chat.id,
@@ -176,7 +176,14 @@ class GraceBot(Bot):
             reply_markup=keyboard_markup,
         )
 
-    def make_event_keyboard(self) -> types.InlineKeyboardMarkup:
+    def _make_event_selecter_keyboard(self) -> types.InlineKeyboardMarkup:
+        """
+        Return keyboard which can be used to select any event from the database.
+
+        Returns
+        -------
+        Keyboard with events as buttons.
+        """
         keyboard_markup = types.InlineKeyboardMarkup()
         events = self.events.events
 
@@ -205,7 +212,20 @@ class GraceBot(Bot):
 
         return keyboard_markup
 
-    async def event_callback_handler(self, query: types.CallbackQuery):
+    async def event_selecter_callback_handler(self, query: types.CallbackQuery) -> None:
+        """
+        This is called when the user presses a button to select an event.
+
+        Parameters
+        ----------
+        query : types.CallbackQuery
+            Callback query which contains info on which message the InlineKeyboard is
+            attached to.
+
+        Returns
+        -------
+        None
+        """
         await query.answer()  # send answer to close the rounding circle
 
         answer_data = query.data
@@ -219,18 +239,45 @@ class GraceBot(Bot):
         elif answer_data == "next":
             await self.show_newer_events(query)
 
-    async def show_older_events(self, query):
+    async def show_older_events(self, query: types.CallbackQuery) -> None:
+        """
+        Updates the InlineKeyboardMarkup such that it shows older events.
+
+        Parameters
+        ----------
+        query : types.CallbackQuery
+            Callback query which contains info on which message the InlineKeyboard is
+            attached to.
+
+        Returns
+        -------
+        None
+        """
         self.start_at += self.increment
 
-        keyboard_markup = self.make_event_keyboard()
+        keyboard_markup = self._make_event_selecter_keyboard()
 
         event_message = query.message
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
 
-    async def show_newer_events(self, query):
+    async def show_newer_events(self, query: types.CallbackQuery) -> None:
+        """
+        Updates the InlineKeyboardMarkup such that it shows newer events.
+
+
+        Parameters
+        ----------
+        query : types.CallbackQuery
+            Callback query which contains info on which message the InlineKeyboard is
+            attached to.
+
+        Returns
+        -------
+        None
+        """
         self.start_at -= self.increment
 
-        keyboard_markup = self.make_event_keyboard()
+        keyboard_markup = self._make_event_selecter_keyboard()
 
         event_message = query.message
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
@@ -275,7 +322,7 @@ class GraceBot(Bot):
 
         await self.send_message(message.chat.id, text, parse_mode="markdown")
 
-    async def send_detector_status(self, message: types.Message):
+    async def send_detector_status(self, message: types.Message) -> None:
         detectors = [Detector("Hanford"), Detector("Livingston"), Detector("Virgo")]
 
         detector_status = []
@@ -291,7 +338,7 @@ class GraceBot(Bot):
 
         await self.send_message(message.chat.id, text)
 
-    async def add_subscriber(self, message: types.Message):
+    async def add_subscriber(self, message: types.Message) -> None:
         """
         Add the user from the message to the subscriber list.
 
@@ -313,7 +360,7 @@ class GraceBot(Bot):
                 user_id, "You will now receive the latest event updates."
             )
 
-    async def remove_subscriber(self, message: types.Message):
+    async def remove_subscriber(self, message: types.Message) -> None:
         """
         Remove the user from the message from the subscriber list.
 
