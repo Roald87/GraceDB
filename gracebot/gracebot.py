@@ -200,7 +200,7 @@ class GraceBot(Bot):
             keyboard_markup.row(*row)
 
         navigation_buttons = []
-        if self.start_at < len(events) - 1:
+        if self.start_at < (len(events) - self.increment):
             navigation_buttons.append(
                 types.InlineKeyboardButton("<<", callback_data="previous")
             )
