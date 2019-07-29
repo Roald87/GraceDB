@@ -17,7 +17,7 @@ class GraceBot(Bot):
         self.events = Events()
         self.events.update_all_events()
         self.start_at = 0
-        self.increment = 2
+        self.increment = 8
         self.subscribers = PermanentSet("subscribers.txt")
         self.event_types = {
             # Probability that the source is a binary black hole merger (both

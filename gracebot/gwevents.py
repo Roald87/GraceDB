@@ -45,8 +45,6 @@ class Events(object):
         for i, _event in enumerate(events):
             progress_bar(i, total_events, "Updating events")
             self.update_single_event(_event["superevent_id"])
-            if i > 3:
-                break
 
     def update_single_event(self, event_id: str):
         """
