@@ -41,7 +41,7 @@ all_event_ids = list(bot.events.events.keys())
 
 @dp.callback_query_handler(lambda cb: cb.data in all_event_ids)
 async def inline_kb_answer_callback_handler(query: types.CallbackQuery):
-    await bot.event_selecter_callback_handler(query)
+    await bot.event_selector_callback_handler(query)
 
 
 @dp.callback_query_handler(text="previous")

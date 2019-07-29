@@ -168,7 +168,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        keyboard_markup = self._make_event_selecter_keyboard()
+        keyboard_markup = self._make_event_selector_keyboard()
 
         await self.send_message(
             chat_id=message.chat.id,
@@ -176,7 +176,7 @@ class GraceBot(Bot):
             reply_markup=keyboard_markup,
         )
 
-    def _make_event_selecter_keyboard(self) -> types.InlineKeyboardMarkup:
+    def _make_event_selector_keyboard(self) -> types.InlineKeyboardMarkup:
         """
         Return keyboard which can be used to select any event from the database.
 
@@ -212,7 +212,7 @@ class GraceBot(Bot):
 
         return keyboard_markup
 
-    async def event_selecter_callback_handler(self, query: types.CallbackQuery) -> None:
+    async def event_selector_callback_handler(self, query: types.CallbackQuery) -> None:
         """
         This is called when the user presses a button to select an event.
 
@@ -255,7 +255,7 @@ class GraceBot(Bot):
         """
         self.start_at += self.increment
 
-        keyboard_markup = self._make_event_selecter_keyboard()
+        keyboard_markup = self._make_event_selector_keyboard()
 
         event_message = query.message
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
@@ -277,7 +277,7 @@ class GraceBot(Bot):
         """
         self.start_at -= self.increment
 
-        keyboard_markup = self._make_event_selecter_keyboard()
+        keyboard_markup = self._make_event_selector_keyboard()
 
         event_message = query.message
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
