@@ -241,7 +241,7 @@ class GraceBot(Bot):
 
     async def show_older_events(self, query: types.CallbackQuery) -> None:
         """
-        Updates the InlineKeyboardMarkup such that it shows older events.
+        Updates the inline keyboard such that it shows older events.
 
         Parameters
         ----------
@@ -255,15 +255,11 @@ class GraceBot(Bot):
         """
         self.start_at += self.increment
 
-        keyboard_markup = self._make_event_selector_keyboard()
-
-        event_message = query.message
-        await event_message.edit_reply_markup(reply_markup=keyboard_markup)
+        await self._update_inline_keyboard(query)
 
     async def show_newer_events(self, query: types.CallbackQuery) -> None:
         """
-        Updates the InlineKeyboardMarkup such that it shows newer events.
-
+        Updates the inline keyboard such that it shows newer events.
 
         Parameters
         ----------
@@ -277,9 +273,25 @@ class GraceBot(Bot):
         """
         self.start_at -= self.increment
 
-        keyboard_markup = self._make_event_selector_keyboard()
+        await self._update_inline_keyboard(query)
 
+    async def _update_inline_keyboard(self, query: types.CallbackQuery) -> None:
+        """
+        Updates the inline keyboard.
+
+        Parameters
+        ----------
+        query : types.CallbackQuery
+            Callback query which contains info on which message the InlineKeyboard is
+            attached to.
+
+        Returns
+        -------
+        None
+        """
+        keyboard_markup = self._make_event_selector_keyboard()
         event_message = query.message
+
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
 
     async def send_o3_stats(self, message: types.Message) -> None:
