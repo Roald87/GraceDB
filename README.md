@@ -17,6 +17,11 @@ Shows the latest measured event.
 
 ![](docs/latest.png)
 
+### `/event`
+Select an event where you want to see the details of.
+
+![](docs/event.png)
+
 ### `/stats` 
 Shows an overview of all measured events during observational run 3.
 
