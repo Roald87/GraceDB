@@ -1,0 +1,8 @@
+help - Shows all commands.
+event - Select any O3 event.
+stats - O3 summary.
+status - Live status of all 3 detectors.
+latest - See the last measured event.
+subscribe - Get instant updates.
+unsubscribe - Cancel instant updates.
+start - Shows all commands.
