@@ -298,6 +298,8 @@ class GraceBot(Bot):
         -------
         None
         """
+        await query.answer()
+
         keyboard_markup = self._make_event_selector_keyboard()
         event_message = query.message
 
