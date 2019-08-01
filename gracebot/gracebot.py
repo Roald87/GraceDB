@@ -1,5 +1,5 @@
 import logging
-from collections import Counter
+from collections import Counter, defaultdict
 
 import aiogram
 from aiogram import Bot, types
@@ -16,7 +16,7 @@ class GraceBot(Bot):
         super(GraceBot, self).__init__(token=token)
         self.events: Events = Events()
         self.events.update_all_events()
-        self.start_at: int = 0
+        self.start_at: dict = defaultdict(int)
         self.increment: int = 8
         self.new_event_messages_send: set = set()
         self.subscribers: PermanentSet = PermanentSet("subscribers.txt")
@@ -185,9 +185,16 @@ class GraceBot(Bot):
             reply_markup=keyboard_markup,
         )
 
-    def _make_event_selector_keyboard(self) -> types.InlineKeyboardMarkup:
+    def _make_event_selector_keyboard(
+        self, start_at: int = 0
+    ) -> types.InlineKeyboardMarkup:
         """
         Return keyboard which can be used to select any event from the database.
+
+        Parameters
+        ----------
+        start_at : int
+            The first event to show in the inline keyboard.
 
         Returns
         -------
@@ -197,9 +204,7 @@ class GraceBot(Bot):
         events = self.events.events
 
         event_ids = list(events.keys())
-        for ids in chunked(
-            event_ids[self.start_at : self.start_at + self.increment], 2
-        ):
+        for ids in chunked(event_ids[start_at : start_at + self.increment], 2):
             row = []
             for _id in ids:
                 event_type = events[_id]["most_likely"]
@@ -209,11 +214,11 @@ class GraceBot(Bot):
             keyboard_markup.row(*row)
 
         navigation_buttons = []
-        if self.start_at < (len(events) - self.increment):
+        if start_at < (len(events) - self.increment):
             navigation_buttons.append(
                 types.InlineKeyboardButton("<<", callback_data="previous")
             )
-        if self.start_at > 0:
+        if start_at > 0:
             navigation_buttons.append(
                 types.InlineKeyboardButton(">>", callback_data="next")
             )
@@ -262,7 +267,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        self.start_at += self.increment
+        self.start_at[query.chat_instance] += self.increment
 
         await self._update_inline_keyboard(query)
 
@@ -280,7 +285,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        self.start_at -= self.increment
+        self.start_at[query.chat_instance] -= self.increment
 
         await self._update_inline_keyboard(query)
 
@@ -300,7 +305,8 @@ class GraceBot(Bot):
         """
         await query.answer()
 
-        keyboard_markup = self._make_event_selector_keyboard()
+        start = self.start_at[query.chat_instance]
+        keyboard_markup = self._make_event_selector_keyboard(start)
         event_message = query.message
 
         await event_message.edit_reply_markup(reply_markup=keyboard_markup)
