@@ -41,7 +41,7 @@ class GraceBot(Bot):
     async def send_preliminary(self, message):
         self.events.update_all_events()
 
-        text = f"A new event has been measured!"
+        text = f"A new event has been measured!\n\n"
         event_id = list(self.events.events.keys())[0]
         await self._send_event_info_to_all_users(event_id, text)
 
@@ -49,27 +49,28 @@ class GraceBot(Bot):
         event_id = event_id_from_message(message)
         self.events.update_single_event(event_id)
 
-        text = f"Event {event_id} has been updated."
+        text = f"Event {event_id} has been updated.\n\n"
         await self._send_event_info_to_all_users(event_id, text)
 
     async def send_retraction(self, message):
         event_id = event_id_from_message(message)
-        text = f"Event {event_id} has been retracted. The event details were:"
+        text = f"Event {event_id} has been retracted. The event details were:\n\n"
 
         await self._send_event_info_to_all_users(event_id, text)
 
         self.events.update_all_events()
 
-    async def _send_event_info_to_all_users(self, event_id: str, text: str) -> None:
+    async def _send_event_info_to_all_users(self, event_id: str, pre_text: str) -> None:
         for user_id in self.subscribers.data:
             try:
-                await self.send_message(user_id, text)
-                await self.send_event_info(user_id, event_id)
+                await self.send_event_info(user_id, event_id, pre_text)
             except aiogram.utils.exceptions.BotBlocked:
                 logging.info(f"User {user_id} has blocked the bot.")
                 continue
 
-    async def send_event_info(self, chat_id: str, event_id: str) -> None:
+    async def send_event_info(
+        self, chat_id: str, event_id: str, pre_text: str = ""
+    ) -> None:
         """
         Send information of a specific event to the user.
 
@@ -79,6 +80,8 @@ class GraceBot(Bot):
             Where to send the message to.
         event_id : str
             The event to send the information about.
+        pre_text : str
+            Will be added to the beginning of the message.
 
         Returns
         -------
@@ -86,7 +89,7 @@ class GraceBot(Bot):
         """
         event = self.events.events[event_id]
 
-        text = f"*{event_id.upper()}*\n" f'{time_ago(event["created"])}\n\n'
+        text = pre_text + f"*{event_id.upper()}*\n" f'{time_ago(event["created"])}\n\n'
 
         try:
             event_type = self.events.get_likely_event_type(event_id)
