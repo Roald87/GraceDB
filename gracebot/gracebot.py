@@ -14,12 +14,13 @@ from permanentset import PermanentSet
 class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
-        self.events = Events()
+        self.events: Events = Events()
         self.events.update_all_events()
-        self.start_at = 0
-        self.increment = 8
-        self.subscribers = PermanentSet("subscribers.txt")
-        self.event_types = {
+        self.start_at: int = 0
+        self.increment: int = 8
+        self.new_event_messages_send: set = set()
+        self.subscribers: PermanentSet = PermanentSet("subscribers.txt")
+        self.event_types: dict = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
             "BBH": "binary black hole merger",
@@ -39,10 +40,15 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message):
+        event_id = list(self.events.events.keys())[0]
+        if event_id in self.new_event_messages_send:
+            return
+        else:
+            self.new_event_messages_send.add(event_id)
+
         self.events.update_all_events()
 
         text = f"A new event has been measured!\n\n"
-        event_id = list(self.events.events.keys())[0]
         await self._send_event_info_to_all_users(event_id, text)
 
     async def send_update(self, message):

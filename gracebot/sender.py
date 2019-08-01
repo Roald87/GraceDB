@@ -14,7 +14,7 @@ from ngrok import get_ngrok_url
 logging.basicConfig(**logging_kwargs)  # type: ignore
 
 
-def post_preliminairy():
+def post_preliminary():
     preliminary_message = fake_telegram_update(preliminary_command)
 
     res = requests.post(f"{get_ngrok_url()}/{secret}", json=preliminary_message)
@@ -48,7 +48,7 @@ def fake_telegram_update(command: str):
     update_json = {
         "message": {
             "from": {"is_bot": True},
-            "chat": {"id": 34702149, "type": "private"},
+            "chat": {"id": 14306049, "type": "private"},
             "date": 1559503719,
             "text": f"/{command}",
             "entities": [

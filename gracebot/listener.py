@@ -29,7 +29,7 @@ def process_gcn(payload, root):
     }
 
     message_poster = {
-        "Preliminary": sender.post_preliminairy,
+        "Preliminary": sender.post_preliminary,
         "Update": sender.post_update,
         "Retraction": sender.post_retraction,
     }
