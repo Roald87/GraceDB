@@ -40,13 +40,13 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message):
+        self.events.update_all_events()
+
         event_id = list(self.events.events.keys())[0]
         if event_id in self.new_event_messages_send:
             return
         else:
             self.new_event_messages_send.add(event_id)
-
-        self.events.update_all_events()
 
         text = f"A new event has been measured!\n\n"
         await self._send_event_info_to_all_users(event_id, text)
