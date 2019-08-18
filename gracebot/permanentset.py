@@ -28,8 +28,11 @@ class PermanentSet(object):
         self._save_data()
 
     def remove(self, number: int):
-        self.data.remove(number)
-        self._save_data()
+        try:
+            self.data.remove(number)
+            self._save_data()
+        except KeyError:
+            pass
 
     def _save_data(self):
         with open(self.fname, "w") as f:
