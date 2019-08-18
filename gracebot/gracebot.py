@@ -18,8 +18,10 @@ class GraceBot(Bot):
         self.events.update_all_events()
         self.start_at: dict = defaultdict(int)
         self.increment: int = 8
-        self.new_event_messages_send: set = set()
-        self.subscribers: PermanentSet = PermanentSet("subscribers.txt")
+        self.new_event_messages_send: PermanentSet = PermanentSet(
+            "new_event_messages_send.txt", str
+        )
+        self.subscribers: PermanentSet = PermanentSet("subscribers.txt", int)
         self.event_types: dict = {
             # Probability that the source is a binary black hole merger (both
             # objects heavier than 5 solar masses)
@@ -43,7 +45,7 @@ class GraceBot(Bot):
         self.events.update_all_events()
 
         event_id = list(self.events.events.keys())[0]
-        if event_id in self.new_event_messages_send:
+        if event_id in self.new_event_messages_send.data:
             return
         else:
             self.new_event_messages_send.add(event_id)
