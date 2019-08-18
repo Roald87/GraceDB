@@ -1,6 +1,7 @@
 config.py
 *.pyc
 gracebot/*.png
+tests/gracebot/img/**.png
 LICENSE.md
 subscribers.txt
 subscribed.txt
