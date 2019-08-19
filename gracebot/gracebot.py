@@ -62,10 +62,11 @@ class GraceBot(Bot):
 
     async def send_retraction(self, message):
         event_id = event_id_from_message(message)
-        self.events.update_single_event(event_id)
-
         text = f"Event {event_id} has been retracted. The event details were:\n\n"
+
         await self._send_event_info_to_all_users(event_id, text)
+
+        self.events.update_all_events()
 
     async def _send_event_info_to_all_users(self, event_id: str, pre_text: str) -> None:
         for user_id in self.subscribers.data:
