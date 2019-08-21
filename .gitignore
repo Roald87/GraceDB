@@ -5,6 +5,7 @@ tests/gracebot/img/**.png
 LICENSE.md
 subscribers.txt
 subscribed.txt
+new_event_messages_send.txt
 wily*
 *.xml
 .idea/
