@@ -97,7 +97,10 @@ class GraceBot(Bot):
         """
         event = self.events.events[event_id]
 
-        text = pre_text + f"*{event_id.upper()}*\n" f'{time_ago(event["created"])}\n\n'
+        link = f"https://gracedb.ligo.org/superevents/{event_id}/view/"
+        text = (
+            pre_text + f"*{event_id.upper()}*\n" + f"{time_ago(event['created'])}\n\n"
+        )
 
         try:
             event_type = self.events.get_likely_event_type(event_id)
@@ -113,6 +116,8 @@ class GraceBot(Bot):
             )
         except KeyError:
             pass
+
+        text += f"\n\n[Event page]({link})"
 
         await self.send_message(chat_id, text, parse_mode="markdown")
 
