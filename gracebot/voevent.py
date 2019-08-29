@@ -41,6 +41,22 @@ class VOEvent(object):
         return self._data["GraceID"]
 
     @property
+    def seen_by_short(self) -> list:
+        """
+        Return abbreviated names of the instruments which measured the event.
+        """
+        return self._data["Instruments"].split(",")
+
+    @property
+    def seen_by_long(self) -> list:
+        """
+        Return full names of the instruments which measured the event.
+        """
+        name_map = {"V1": "Virgo", "L1": "Livingston", "H1": "Hanford"}
+
+        return [name_map.get(name, "") for name in self.seen_by_short]
+
+    @property
     def p_astro(self) -> Dict[str, float]:
         p_astro = dict().fromkeys(  # type: ignore
             ["BNS", "NSBH", "BBH", "MassGap", "Terrestrial"], 0.0
@@ -105,3 +121,10 @@ class VOEvent(object):
                 else:
                     logging.warning(f"Failed to get voevent from {url}")
         self._add_distance(self._data["skymap_fits"])
+
+
+if __name__ == "__main__":
+    e = VOEvent()
+    e.from_event_id("S190814bv")
+    print(e.seen_by_long)
+    print(e.seen_by_short)
