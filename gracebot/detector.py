@@ -23,7 +23,7 @@ class Detector:
     source: str = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
     status: str = ""
     status_icon: str = ""
-    duration: timedelta = timedelta(0)
+    status_duration: timedelta = timedelta(0)
 
     def __post_init__(self):
         if self._remote_source():
@@ -43,7 +43,7 @@ class Detector:
         self.status_icon = self._get_status_icon()
 
         duration = parser.data[detector_index + 2]
-        self.duration = self._convert_to_time(duration)
+        self.status_duration = self._convert_to_time(duration)
 
     def _get_status_icon(self) -> str:
         check_mark = ":white_check_mark:"

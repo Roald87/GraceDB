@@ -25,7 +25,7 @@ class Events(object):
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
 
-    def update_all_events(self):
+    def update_all(self):
         """
         Get the latest events from the Grace database.
 
@@ -44,9 +44,11 @@ class Events(object):
         total_events = len(events)
         for i, _event in enumerate(events):
             progress_bar(i, total_events, "Updating events")
-            self.update_single_event(_event["superevent_id"])
+            self.update_single(_event["superevent_id"])
+            if i > 5:
+                break
 
-    def update_single_event(self, event_id: str):
+    def update_single(self, event_id: str):
         """
         Update and store the data of a single event in the event dictionary.
 
@@ -130,7 +132,7 @@ class Events(object):
             await asyncio.sleep(delay=36000)
 
             logging.info("Refreshing event database.")
-            self.update_all_events()
+            self.update_all()
 
     def get_likely_event_type(self, event_id: str) -> str:
         """

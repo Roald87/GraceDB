@@ -16,22 +16,8 @@ class VOEvent(object):
     def __init__(self):
         self.client = GraceDb()
         self._data = {}
-        self._distance = 0
-        self._distance_std = 0
-
-    @property
-    def distance(self) -> float:
-        """
-        Return distance of event in million light years.
-        """
-        return self._distance
-
-    @property
-    def distance_std(self) -> float:
-        """
-        Return one sigma uncertainty in distance in million light years.
-        """
-        return self._distance_std
+        self.distance = 0
+        self.distance_std = 0
 
     @property
     def id(self) -> str:
@@ -66,15 +52,15 @@ class VOEvent(object):
             try:
                 p_astro[key] = float(self._data[key])
             except KeyError:
-                logging.warning(f"Couldn't find {key} in VOEent xml!")
+                logging.warning(f"Couldn't find {key} in VOEvent xml!")
                 pass
 
         return p_astro
 
     def _add_distance(self, url: str):
         with fits.open(url) as fit_data:
-            self._distance = mpc_to_mly(fit_data[1].header["DISTMEAN"])
-            self._distance_std = mpc_to_mly(fit_data[1].header["DISTSTD"])
+            self.distance = mpc_to_mly(fit_data[1].header["DISTMEAN"])
+            self.distance_std = mpc_to_mly(fit_data[1].header["DISTSTD"])
 
     def _xml_to_dict(self, root: ElementTree.Element) -> Dict[str, str]:
         return {
