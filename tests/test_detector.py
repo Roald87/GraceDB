@@ -1,3 +1,5 @@
+import pytest
+
 from datetime import timedelta
 from unittest import TestCase
 
@@ -5,8 +7,6 @@ from detector import Detector
 
 source = "./data/detector_status.html"
 source2 = "./data/detector_status2.html"
-
-import pytest
 
 
 @pytest.fixture(scope="class")
