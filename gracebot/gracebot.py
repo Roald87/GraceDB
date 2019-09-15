@@ -365,9 +365,20 @@ class GraceBot(Bot):
         await self.send_message(message.chat.id, text, parse_mode="markdown")
 
     async def send_detector_status(self, message: types.Message) -> None:
+        """
+        Send status of all three detectors to the user.
+
+        Parameters
+        ----------
+        message : types.Message
+            The message send by the user.
+
+        Returns
+        -------
+        None
+        """
         detectors = [Detector("Hanford"), Detector("Livingston"), Detector("Virgo")]
 
-        # TODO move to detector.py
         detector_status = []
         for detector in detectors:
             hours = detector.status_duration.days * 24 + (
