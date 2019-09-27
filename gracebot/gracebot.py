@@ -116,12 +116,7 @@ class GraceBot(Bot):
             )
 
             instruments = self.events.events[event_id]["instruments_long"]
-            instruments_text = ", ".join(instruments)
-            if len(instruments) > 1:
-                instruments_text = instruments_text[::-1].replace(" ,", " dna ", 1)[
-                    ::-1
-                ]
-            text += f" The event was measured by {instruments_text}."
+            text += f" The event was measured by {inline_list(instruments)}."
         except KeyError:
             pass
 
@@ -465,3 +460,12 @@ def event_id_from_message(message: types.Message) -> str:
         event_id = None
 
     return event_id
+
+
+def inline_list(items):
+    if len(items) == 0:
+        return ""
+    elif len(items) == 1:
+        return items[0]
+    else:
+        return ", ".join(items[:-1]) + f" and {items[-1]}"
