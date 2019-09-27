@@ -114,6 +114,14 @@ class GraceBot(Bot):
             text = (
                 text[:-1] + f" at {distance_mean} ± {distance_std} billion light years."
             )
+
+            instruments = self.events.events[event_id]["instruments_long"]
+            instruments_text = ", ".join(instruments)
+            if len(instruments) > 1:
+                instruments_text = instruments_text[::-1].replace(" ,", " dna ", 1)[
+                    ::-1
+                ]
+            text += f" The event was measured by {instruments_text}."
         except KeyError:
             pass
 

@@ -83,6 +83,7 @@ class Events(object):
                 voevent.from_event_id(_event_id)
                 self._add_event_distance(voevent)
                 self._add_event_classification(voevent)
+                self._add_instruments(voevent)
             except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
                 logging.warning(
                     f"Couldn't get info from VOEvent file with event id {_event_id}"
@@ -118,6 +119,20 @@ class Events(object):
         """
         self.events[voevent.id]["event_types"] = voevent.p_astro
         self.events[voevent.id]["most_likely"] = self.get_likely_event_type(voevent.id)
+
+    def _add_instruments(self, voevent: VOEvent):
+        """
+
+        Parameters
+        ----------
+        voevent
+
+        Returns
+        -------
+
+        """
+        self.events[voevent.id]["instruments_short"] = voevent.seen_by_short
+        self.events[voevent.id]["instruments_long"] = voevent.seen_by_long
 
     async def _periodic_event_updater(self):
         """
