@@ -107,10 +107,3 @@ class VOEvent(object):
                 else:
                     logging.warning(f"Failed to get voevent from {url}")
         self._add_distance(self._data["skymap_fits"])
-
-
-if __name__ == "__main__":
-    e = VOEvent()
-    e.from_event_id("S190814bv")
-    print(e.seen_by_long)
-    print(e.seen_by_short)
