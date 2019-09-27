@@ -15,9 +15,9 @@ class GraceBot(Bot):
     def __init__(self, token: str):
         super(GraceBot, self).__init__(token=token)
         self.events: Events = Events()
-        self.events.update_all_events()
-        self.start_at: dict = defaultdict(int)
-        self.increment: int = 8
+        self.events.update_all()
+        self._event_selector_start: dict = defaultdict(int)
+        self._event_selector_increment: int = 8
         self.new_event_messages_send: PermanentSet = PermanentSet(
             "new_event_messages_send.txt", str
         )
@@ -42,7 +42,7 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message):
-        self.events.update_all_events()
+        self.events.update_all()
 
         event_id = list(self.events.events.keys())[0]
         if event_id in self.new_event_messages_send.data:
@@ -55,7 +55,7 @@ class GraceBot(Bot):
 
     async def send_update(self, message):
         event_id = event_id_from_message(message)
-        self.events.update_single_event(event_id)
+        self.events.update_single(event_id)
 
         text = f"Event {event_id} has been updated.\n\n"
         await self._send_event_info_to_all_users(event_id, text)
@@ -66,7 +66,7 @@ class GraceBot(Bot):
 
         await self._send_event_info_to_all_users(event_id, text)
 
-        self.events.update_all_events()
+        self.events.update_all()
 
     async def _send_event_info_to_all_users(self, event_id: str, pre_text: str) -> None:
         for user_id in self.subscribers.data:
@@ -114,6 +114,14 @@ class GraceBot(Bot):
             text = (
                 text[:-1] + f" at {distance_mean} ± {distance_std} billion light years."
             )
+
+            instruments = self.events.events[event_id]["instruments_long"]
+            instruments_text = ", ".join(instruments)
+            if len(instruments) > 1:
+                instruments_text = instruments_text[::-1].replace(" ,", " dna ", 1)[
+                    ::-1
+                ]
+            text += f" The event was measured by {instruments_text}."
         except KeyError:
             pass
 
@@ -211,7 +219,9 @@ class GraceBot(Bot):
         events = self.events.events
 
         event_ids = list(events.keys())
-        for ids in chunked(event_ids[start_at : start_at + self.increment], 2):
+        for ids in chunked(
+            event_ids[start_at : start_at + self._event_selector_increment], 2
+        ):
             row = []
             for _id in ids:
                 event_type = events[_id]["most_likely"]
@@ -221,7 +231,7 @@ class GraceBot(Bot):
             keyboard_markup.row(*row)
 
         navigation_buttons = []
-        if start_at < (len(events) - self.increment):
+        if start_at < (len(events) - self._event_selector_increment):
             navigation_buttons.append(
                 types.InlineKeyboardButton("<<", callback_data="previous")
             )
@@ -274,7 +284,9 @@ class GraceBot(Bot):
         -------
         None
         """
-        self.start_at[query.chat_instance] += self.increment
+        self._event_selector_start[
+            query.chat_instance
+        ] += self._event_selector_increment
 
         await self._update_inline_keyboard(query)
 
@@ -292,7 +304,9 @@ class GraceBot(Bot):
         -------
         None
         """
-        self.start_at[query.chat_instance] -= self.increment
+        self._event_selector_start[
+            query.chat_instance
+        ] -= self._event_selector_increment
 
         await self._update_inline_keyboard(query)
 
@@ -312,7 +326,7 @@ class GraceBot(Bot):
         """
         await query.answer()
 
-        start = self.start_at[query.chat_instance]
+        start = self._event_selector_start[query.chat_instance]
         keyboard_markup = self._make_event_selector_keyboard(start)
         event_message = query.message
 
@@ -348,23 +362,37 @@ class GraceBot(Bot):
             f"Observational run 3 has detected *{len(self.events.events)}* "
             "events since April 1st 2019.\n\n"
             ""
-            "Event types (confirmed/unconfirmed)\n"
-            f"Binary black hole mergers: {0}/{unconfirmed_bbh}.\n"
-            f"Binary neutron star mergers: {0}/{unconfirmed_bns}.\n"
-            f"Neutron star black hole mergers: {0}/{unconfirmed_nsbh}.\n"
-            f"At least one object between 3 and 5 solar masses: {0}/{unconfirmed_mg}.\n"
-            f"Likely terrestrial: {terrestrial}.\n"
+            "*Event types*\n"
+            f"Binary black hole mergers: *{unconfirmed_bbh}*.\n"
+            f"Binary neutron star mergers: *{unconfirmed_bns}*.\n"
+            f"Neutron star black hole mergers: *{unconfirmed_nsbh}*\n"
+            f"At least one object between 3 and 5 solar masses: *{unconfirmed_mg}*.\n"
+            f"Likely terrestrial (false alarm): *{terrestrial}*.\n"
         )
 
         await self.send_message(message.chat.id, text, parse_mode="markdown")
 
     async def send_detector_status(self, message: types.Message) -> None:
+        """
+        Send status of all three detectors to the user.
+
+        Parameters
+        ----------
+        message : types.Message
+            The message send by the user.
+
+        Returns
+        -------
+        None
+        """
         detectors = [Detector("Hanford"), Detector("Livingston"), Detector("Virgo")]
 
         detector_status = []
         for detector in detectors:
-            hours = detector.duration.days * 24 + (detector.duration.seconds // 3600)
-            minutes = (detector.duration.seconds % 3600) // 60
+            hours = detector.status_duration.days * 24 + (
+                detector.status_duration.seconds // 3600
+            )
+            minutes = (detector.status_duration.seconds % 3600) // 60
 
             detector_status.append(
                 f"{emojize(detector.status_icon)} {detector.name}: "

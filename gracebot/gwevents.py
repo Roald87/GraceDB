@@ -25,7 +25,7 @@ class Events(object):
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
 
-    def update_all_events(self):
+    def update_all(self):
         """
         Get the latest events from the Grace database.
 
@@ -44,9 +44,9 @@ class Events(object):
         total_events = len(events)
         for i, _event in enumerate(events):
             progress_bar(i, total_events, "Updating events")
-            self.update_single_event(_event["superevent_id"])
+            self.update_single(_event["superevent_id"])
 
-    def update_single_event(self, event_id: str):
+    def update_single(self, event_id: str):
         """
         Update and store the data of a single event in the event dictionary.
 
@@ -81,6 +81,7 @@ class Events(object):
                 voevent.from_event_id(_event_id)
                 self._add_event_distance(voevent)
                 self._add_event_classification(voevent)
+                self._add_instruments(voevent)
             except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
                 logging.warning(
                     f"Couldn't get info from VOEvent file with event id {_event_id}"
@@ -117,6 +118,20 @@ class Events(object):
         self.events[voevent.id]["event_types"] = voevent.p_astro
         self.events[voevent.id]["most_likely"] = self.get_likely_event_type(voevent.id)
 
+    def _add_instruments(self, voevent: VOEvent):
+        """
+
+        Parameters
+        ----------
+        voevent
+
+        Returns
+        -------
+
+        """
+        self.events[voevent.id]["instruments_short"] = voevent.seen_by_short
+        self.events[voevent.id]["instruments_long"] = voevent.seen_by_long
+
     async def _periodic_event_updater(self):
         """
         Fetches all the events from the GraceDB database.
@@ -130,7 +145,7 @@ class Events(object):
             await asyncio.sleep(delay=36000)
 
             logging.info("Refreshing event database.")
-            self.update_all_events()
+            self.update_all()
 
     def get_likely_event_type(self, event_id: str) -> str:
         """
