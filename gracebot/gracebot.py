@@ -150,15 +150,14 @@ class GraceBot(Bot):
         None.
         """
         text = (
-            "Get information on LIGO/Virgo gravitational wave events.\n"
+            "Stay up-to-date on LIGO/Virgo gravitational wave events!\n"
             "\n"
-            "Use /latest to see the latest event, or see an overview of all "
-            "O3 events with /stats. You can also see the /status of all three detectors.\n"
-            "\n"
-            "Currently in beta:\n"
             "You can /subscribe to automatically receive a message whenever a new event is "
             "measured, or an existing event is updated. Use /unsubscribe to stop receiving "
-            "messages."
+            "messages.\n"
+            "\n"
+            "Furthermore you can check out the /latest event, or select a past /event. "
+            "Use /stats to see and overview of all O3 events or view the live detector /status."
         )
 
         await self.send_message(message.chat.id, text)
