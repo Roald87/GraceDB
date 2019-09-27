@@ -362,12 +362,12 @@ class GraceBot(Bot):
             f"Observational run 3 has detected *{len(self.events.events)}* "
             "events since April 1st 2019.\n\n"
             ""
-            "Event types (confirmed/unconfirmed)\n"
-            f"Binary black hole mergers: {0}/{unconfirmed_bbh}.\n"
-            f"Binary neutron star mergers: {0}/{unconfirmed_bns}.\n"
-            f"Neutron star black hole mergers: {0}/{unconfirmed_nsbh}.\n"
-            f"At least one object between 3 and 5 solar masses: {0}/{unconfirmed_mg}.\n"
-            f"Likely terrestrial (false alarm): {terrestrial}.\n"
+            "*Event types*\n"
+            f"Binary black hole mergers: *{unconfirmed_bbh}*.\n"
+            f"Binary neutron star mergers: *{unconfirmed_bns}*.\n"
+            f"Neutron star black hole mergers: *{unconfirmed_nsbh}*\n"
+            f"At least one object between 3 and 5 solar masses: *{unconfirmed_mg}*.\n"
+            f"Likely terrestrial (false alarm): *{terrestrial}*.\n"
         )
 
         await self.send_message(message.chat.id, text, parse_mode="markdown")
