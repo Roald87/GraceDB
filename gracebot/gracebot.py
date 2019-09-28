@@ -43,7 +43,7 @@ class GraceBot(Bot):
     async def send_preliminary(self, message):
         self.events.update_all()
 
-        event_id = list(self.events.events.all_keys())[0]
+        event_id = list(self.events.data.all_keys())[0]
         if event_id in self.new_event_messages_send.data:
             return
         else:
@@ -94,7 +94,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        event = self.events.events[event_id]
+        event = self.events.data[event_id]
 
         link = f"https://gracedb.ligo.org/superevents/{event_id}/view/"
         text = (
@@ -103,7 +103,7 @@ class GraceBot(Bot):
 
         try:
             event_type = self.events.get_likely_event_type(event_id)
-            confidence = self.events.events[event_id]["event_types"][event_type]
+            confidence = self.events.data[event_id]["event_types"][event_type]
             text += (
                 f"Unconfirmed {self.event_types[event_type]} ({confidence:.2%}) event."
             )
@@ -114,7 +114,7 @@ class GraceBot(Bot):
                 text[:-1] + f" at {distance_mean} ± {distance_std} billion light years."
             )
 
-            instruments = self.events.events[event_id]["instruments_long"]
+            instruments = self.events.data[event_id]["instruments_long"]
             text += f" The event was measured by {inline_list(instruments)}."
         except KeyError:
             pass
@@ -175,9 +175,7 @@ class GraceBot(Bot):
 
     @property
     def event_keys(self) -> list:
-        return [
-            f"{id}_{info['most_likely']}" for id, info in self.events.events.items()
-        ]
+        return [f"{id}_{info['most_likely']}" for id, info in self.events.data.items()]
 
     async def send_event_selector(self, message: types.Message) -> None:
         """
@@ -245,7 +243,7 @@ class GraceBot(Bot):
         # in graceDB if they are confirmed. For that use:
         # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
         event_counter = Counter(
-            [info["most_likely"] for info in self.events.events.values()]
+            [info["most_likely"] for info in self.events.data.values()]
         )
 
         unconfirmed_bbh = event_counter["BBH"]
@@ -255,7 +253,7 @@ class GraceBot(Bot):
         terrestrial = event_counter["Terrestrial"]
 
         text = (
-            f"Observational run 3 has detected *{len(self.events.events)}* "
+            f"Observational run 3 has detected *{len(self.events.data)}* "
             "events since April 1st 2019.\n\n"
             ""
             "*Event types*\n"
