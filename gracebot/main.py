@@ -33,25 +33,15 @@ async def send_latest_event(message: types.Message):
 
 @dp.message_handler(commands=["event"])
 async def send_event(message: types.Message):
-    await bot.event_selector(message)
+    await bot.send_event_selector(message)
 
 
-all_event_ids = list(bot.events.events.keys())
+event_selection_keys = bot.event_keys + ["next", "previous"]
 
 
-@dp.callback_query_handler(lambda cb: cb.data in all_event_ids)
+@dp.callback_query_handler(lambda cb: cb.data in event_selection_keys)
 async def inline_kb_answer_callback_handler(query: types.CallbackQuery):
     await bot.event_selector_callback_handler(query)
-
-
-@dp.callback_query_handler(text="previous")
-async def show_older_events_callback_handler(query: types.CallbackQuery):
-    await bot.show_older_events(query)
-
-
-@dp.callback_query_handler(text="next")
-async def show_newer_events_callback_handler(query: types.CallbackQuery):
-    await bot.show_newer_events(query)
 
 
 @dp.message_handler(commands=["stats"])
