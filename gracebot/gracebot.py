@@ -190,7 +190,7 @@ class GraceBot(Bot):
         None
         """
         self.event_keyboards[message.chat.id] = InlineKeyboard(
-            self.event_keys, rows=1, columns=2
+            self.event_keys, rows=4, columns=2
         )
 
         await self.send_message(

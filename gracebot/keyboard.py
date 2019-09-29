@@ -48,7 +48,9 @@ class InlineKeyboard(types.InlineKeyboardMarkup):
         for keys in chunked(self.visible_keys, self._columns):
             row = []
             for key in keys:
-                row.append(types.InlineKeyboardButton(key, callback_data=key))
+                row.append(
+                    types.InlineKeyboardButton(key.replace("_", " "), callback_data=key)
+                )
             self.row(*row)
 
         self.row(*self._navigation_buttons())
