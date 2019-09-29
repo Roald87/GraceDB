@@ -4,20 +4,19 @@ from collections import Counter, defaultdict
 import aiogram
 from aiogram import Bot, types
 from aiogram.utils.emoji import emojize
-from more_itertools import chunked
 
 from detector import Detector
 from gwevents import Events, time_ago
+from keyboard import InlineKeyboard
 from permanentset import PermanentSet
 
 
 class GraceBot(Bot):
     def __init__(self, token: str):
-        super(GraceBot, self).__init__(token=token)
+        super().__init__(token=token)
         self.events: Events = Events()
         self.events.update_all()
-        self._event_selector_start: dict = defaultdict(int)
-        self._event_selector_increment: int = 8
+        self.event_keyboards: dict = defaultdict(InlineKeyboard)
         self.new_event_messages_send: PermanentSet = PermanentSet(
             "new_event_messages_send.txt", str
         )
@@ -44,7 +43,7 @@ class GraceBot(Bot):
     async def send_preliminary(self, message):
         self.events.update_all()
 
-        event_id = list(self.events.events.keys())[0]
+        event_id = list(self.events.data.all_keys())[0]
         if event_id in self.new_event_messages_send.data:
             return
         else:
@@ -95,7 +94,7 @@ class GraceBot(Bot):
         -------
         None
         """
-        event = self.events.events[event_id]
+        event = self.events.data[event_id]
 
         link = f"https://gracedb.ligo.org/superevents/{event_id}/view/"
         text = (
@@ -104,7 +103,7 @@ class GraceBot(Bot):
 
         try:
             event_type = self.events.get_likely_event_type(event_id)
-            confidence = self.events.events[event_id]["event_types"][event_type]
+            confidence = self.events.data[event_id]["event_types"][event_type]
             text += (
                 f"Unconfirmed {self.event_types[event_type]} ({confidence:.2%}) event."
             )
@@ -115,13 +114,8 @@ class GraceBot(Bot):
                 text[:-1] + f" at {distance_mean} ± {distance_std} billion light years."
             )
 
-            instruments = self.events.events[event_id]["instruments_long"]
-            instruments_text = ", ".join(instruments)
-            if len(instruments) > 1:
-                instruments_text = instruments_text[::-1].replace(" ,", " dna ", 1)[
-                    ::-1
-                ]
-            text += f" The event was measured by {instruments_text}."
+            instruments = self.events.data[event_id]["instruments_long"]
+            text += f" The event was measured by {inline_list(instruments)}."
         except KeyError:
             pass
 
@@ -150,15 +144,14 @@ class GraceBot(Bot):
         None.
         """
         text = (
-            "Get information on LIGO/Virgo gravitational wave events.\n"
+            "Stay up-to-date on LIGO/Virgo gravitational wave events!\n"
             "\n"
-            "Use /latest to see the latest event, or see an overview of all "
-            "O3 events with /stats. You can also see the /status of all three detectors.\n"
-            "\n"
-            "Currently in beta:\n"
             "You can /subscribe to automatically receive a message whenever a new event is "
             "measured, or an existing event is updated. Use /unsubscribe to stop receiving "
-            "messages."
+            "messages.\n"
+            "\n"
+            "Furthermore you can check out the /latest event, or select a past /event. "
+            "Use /stats to see and overview of all O3 events or view the live detector /status."
         )
 
         await self.send_message(message.chat.id, text)
@@ -180,7 +173,11 @@ class GraceBot(Bot):
 
         await self.send_event_info(message.chat.id, event_id)
 
-    async def event_selector(self, message: types.Message) -> None:
+    @property
+    def event_keys(self) -> list:
+        return [f"{id}_{info['most_likely']}" for id, info in self.events.data.items()]
+
+    async def send_event_selector(self, message: types.Message) -> None:
         """
         User can select any event from the O3 run and get a message with the details.
 
@@ -192,56 +189,15 @@ class GraceBot(Bot):
         -------
         None
         """
-        keyboard_markup = self._make_event_selector_keyboard()
+        self.event_keyboards[message.chat.id] = InlineKeyboard(
+            self.event_keys, rows=1, columns=2
+        )
 
         await self.send_message(
             chat_id=message.chat.id,
             text="Select the event you want to see the details of.",
-            reply_markup=keyboard_markup,
+            reply_markup=self.event_keyboards[message.chat.id],
         )
-
-    def _make_event_selector_keyboard(
-        self, start_at: int = 0
-    ) -> types.InlineKeyboardMarkup:
-        """
-        Return keyboard which can be used to select any event from the database.
-
-        Parameters
-        ----------
-        start_at : int
-            The first event to show in the inline keyboard.
-
-        Returns
-        -------
-        Keyboard with events as buttons.
-        """
-        keyboard_markup = types.InlineKeyboardMarkup()
-        events = self.events.events
-
-        event_ids = list(events.keys())
-        for ids in chunked(
-            event_ids[start_at : start_at + self._event_selector_increment], 2
-        ):
-            row = []
-            for _id in ids:
-                event_type = events[_id]["most_likely"]
-                row.append(
-                    types.InlineKeyboardButton(f"{_id} {event_type}", callback_data=_id)
-                )
-            keyboard_markup.row(*row)
-
-        navigation_buttons = []
-        if start_at < (len(events) - self._event_selector_increment):
-            navigation_buttons.append(
-                types.InlineKeyboardButton("<<", callback_data="previous")
-            )
-        if start_at > 0:
-            navigation_buttons.append(
-                types.InlineKeyboardButton(">>", callback_data="next")
-            )
-        keyboard_markup.row(*navigation_buttons)
-
-        return keyboard_markup
 
     async def event_selector_callback_handler(self, query: types.CallbackQuery) -> None:
         """
@@ -262,75 +218,13 @@ class GraceBot(Bot):
         answer_data = query.data
         logging.debug(f"answer_data={answer_data}")
 
-        valid_event_ids = list(self.events.events.keys())
+        user_id = query.from_user.id
+        valid_event_ids = self.event_keyboards[user_id].visible_keys
         if answer_data in valid_event_ids:
-            await self.send_event_info(query.from_user.id, answer_data)
-        elif answer_data == "previous":
-            await self.show_older_events(query)
-        elif answer_data == "next":
-            await self.show_newer_events(query)
-
-    async def show_older_events(self, query: types.CallbackQuery) -> None:
-        """
-        Updates the inline keyboard such that it shows older events.
-
-        Parameters
-        ----------
-        query : types.CallbackQuery
-            Callback query which contains info on which message the InlineKeyboard is
-            attached to.
-
-        Returns
-        -------
-        None
-        """
-        self._event_selector_start[
-            query.chat_instance
-        ] += self._event_selector_increment
-
-        await self._update_inline_keyboard(query)
-
-    async def show_newer_events(self, query: types.CallbackQuery) -> None:
-        """
-        Updates the inline keyboard such that it shows newer events.
-
-        Parameters
-        ----------
-        query : types.CallbackQuery
-            Callback query which contains info on which message the InlineKeyboard is
-            attached to.
-
-        Returns
-        -------
-        None
-        """
-        self._event_selector_start[
-            query.chat_instance
-        ] -= self._event_selector_increment
-
-        await self._update_inline_keyboard(query)
-
-    async def _update_inline_keyboard(self, query: types.CallbackQuery) -> None:
-        """
-        Updates the inline keyboard.
-
-        Parameters
-        ----------
-        query : types.CallbackQuery
-            Callback query which contains info on which message the InlineKeyboard is
-            attached to.
-
-        Returns
-        -------
-        None
-        """
-        await query.answer()
-
-        start = self._event_selector_start[query.chat_instance]
-        keyboard_markup = self._make_event_selector_keyboard(start)
-        event_message = query.message
-
-        await event_message.edit_reply_markup(reply_markup=keyboard_markup)
+            event_id, _ = answer_data.split("_")
+            await self.send_event_info(user_id, event_id)
+        else:
+            await self.event_keyboards[user_id].update(query)
 
     async def send_o3_stats(self, message: types.Message) -> None:
         """
@@ -349,7 +243,7 @@ class GraceBot(Bot):
         # in graceDB if they are confirmed. For that use:
         # https://www.gw-openscience.org/catalog/GWTC-1-confident/html/
         event_counter = Counter(
-            [info["most_likely"] for info in self.events.events.values()]
+            [info["most_likely"] for info in self.events.data.values()]
         )
 
         unconfirmed_bbh = event_counter["BBH"]
@@ -359,7 +253,7 @@ class GraceBot(Bot):
         terrestrial = event_counter["Terrestrial"]
 
         text = (
-            f"Observational run 3 has detected *{len(self.events.events)}* "
+            f"Observational run 3 has detected *{len(self.events.data)}* "
             "events since April 1st 2019.\n\n"
             ""
             "*Event types*\n"
@@ -466,3 +360,12 @@ def event_id_from_message(message: types.Message) -> str:
         event_id = None
 
     return event_id
+
+
+def inline_list(items):
+    if len(items) == 0:
+        return ""
+    elif len(items) == 1:
+        return items[0]
+    else:
+        return ", ".join(items[:-1]) + f" and {items[-1]}"
