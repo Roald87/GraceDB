@@ -45,9 +45,6 @@ class Events(object):
         for i, event in enumerate(events):
             self._add_to_event_data(event)
 
-            if i > 2:
-                break
-
         end = time.time()
         logging.info(f"Updating {i} events took {round(end - start, 2)} s.")
 
