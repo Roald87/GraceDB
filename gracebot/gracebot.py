@@ -43,7 +43,7 @@ class GraceBot(Bot):
     async def send_preliminary(self, message):
         self.events.update_all()
 
-        event_id = list(self.events.data.all_keys())[0]
+        event_id = list(self.events.data.keys())[0]
         if event_id in self.new_event_messages_send.data:
             return
         else:
