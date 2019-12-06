@@ -58,9 +58,15 @@ class VOEvent(object):
         return p_astro
 
     def _add_distance(self, url: str):
-        with fits.open(url) as fit_data:
-            self.distance = mpc_to_mly(fit_data[1].header["DISTMEAN"])
-            self.distance_std = mpc_to_mly(fit_data[1].header["DISTSTD"])
+        try:
+            with fits.open(url) as fit_data:
+                self.distance = mpc_to_mly(fit_data[1].header["DISTMEAN"])
+                self.distance_std = mpc_to_mly(fit_data[1].header["DISTSTD"])
+        except KeyError as e:
+            logging.warning(
+                f"Couldn't get the distance from event url {url}.\n" + f"Exception: {e}"
+            )
+            pass
 
     def _xml_to_dict(self, root: ElementTree.Element) -> Dict[str, str]:
         return {
