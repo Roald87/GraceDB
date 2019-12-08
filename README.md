@@ -3,7 +3,7 @@ A Telegram bot which you can use to get information on gravitational wave events
 from LIGO/Virgo. 
 
 ## Usage
-Add the bot by searching for GraceDbBot in Telegram or click [here](t.me/GraceDbBot).
+Add the bot by searching for **GraceDbBot** on Telegram or click [here](https://t.me/GraceDbBot).
 
 Currently the bot responds to the following commands:
 
