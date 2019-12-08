@@ -1,9 +1,8 @@
 import logging
-from dataclasses import dataclass
-from datetime import timedelta
-from html.parser import HTMLParser
-
 import requests
+
+from datetime import timedelta, datetime
+from html.parser import HTMLParser
 
 
 class MyHTMLParser(HTMLParser):
@@ -16,18 +15,35 @@ class MyHTMLParser(HTMLParser):
             self.data.append(data)
 
 
-@dataclass
-class Detector:
+retrieve_date = datetime(1987, 4, 3)
+text = ""
 
-    name: str
-    source: str = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
-    status: str = ""
-    status_icon: str = ""
-    duration: timedelta = timedelta(0)
+
+class Detector:
+    default_source = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
+
+    def __init__(self, name, source=default_source):
+        self.name = name
+        self.source = source
+        self.status = ""
+        self.status_icon = ""
+        self.status_duration = timedelta(0)
+        self.__post_init__()
+
+    @property
+    def age(self):
+        global retrieve_date
+        return datetime.now() - retrieve_date
 
     def __post_init__(self):
-        if self._remote_source():
+        global retrieve_date
+        global text
+
+        if self.age < timedelta(minutes=1):
+            pass
+        elif self._remote_source():
             text = requests.get(self.source).text
+            retrieve_date = datetime.now()
         else:
             with open(self.source, "r") as file:
                 text = file.read()
@@ -43,7 +59,7 @@ class Detector:
         self.status_icon = self._get_status_icon()
 
         duration = parser.data[detector_index + 2]
-        self.duration = self._convert_to_time(duration)
+        self.status_duration = self._convert_to_time(duration)
 
     def _get_status_icon(self) -> str:
         check_mark = ":white_check_mark:"

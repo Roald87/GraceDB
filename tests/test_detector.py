@@ -1,3 +1,5 @@
+import pytest
+
 from datetime import timedelta
 from unittest import TestCase
 
@@ -7,66 +9,96 @@ source = "./data/detector_status.html"
 source2 = "./data/detector_status2.html"
 
 
+@pytest.fixture(scope="class")
+def hanford_observing(request):
+    detector = Detector("Hanford", source=source)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("hanford_observing")
 class TestHanford(TestCase):
-    def setUp(self):
-        self.hanford = Detector("Hanford", source=source)
-
     def test_name(self):
-        assert self.hanford.name == "Hanford"
+        assert self.detector.name == "Hanford"
 
     def test_status(self):
-        assert self.hanford.status == "Observing"
+        assert self.detector.status == "Observing"
 
     def test_duration(self):
-        assert self.hanford.duration == timedelta(minutes=51)
+        assert self.detector.status_duration == timedelta(minutes=51)
 
 
+@pytest.fixture(scope="class")
+def livingston_down(request):
+    detector = Detector("Livingston", source=source)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("livingston_down")
 class TestLivingston(TestCase):
-    def setUp(self):
-        self.livingston = Detector("Livingston", source=source)
-
     def test_name(self):
-        assert self.livingston.name == "Livingston"
+        assert self.detector.name == "Livingston"
 
     def test_status(self):
-        assert self.livingston.status == "Down"
+        assert self.detector.status == "Down"
 
     def test_duration(self):
-        assert self.livingston.duration == timedelta(minutes=2)
+        assert self.detector.status_duration == timedelta(minutes=2)
 
 
+@pytest.fixture(scope="class")
+def virgo_adjusting(request):
+    detector = Detector("Virgo", source=source)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("virgo_adjusting")
 class TestVirgo(TestCase):
-    def setUp(self):
-        self.virgo = Detector("Virgo", source=source)
-
     def test_name(self):
-        assert self.virgo.name == "Virgo"
+        assert self.detector.name == "Virgo"
 
     def test_status(self):
-        assert self.virgo.status == "Adjusting"
+        assert self.detector.status == "Adjusting"
 
     def test_duration(self):
-        assert self.virgo.duration == timedelta(minutes=10)
+        assert self.detector.status_duration == timedelta(minutes=10)
 
 
+@pytest.fixture(scope="class")
+def hanford_down(request):
+    detector = Detector("Hanford", source=source2)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("hanford_down")
 class TestHanford2(TestCase):
-    def setUp(self):
-        self.hanford = Detector("Hanford", source=source2)
-
     def test_name(self):
-        assert self.hanford.name == "Hanford"
+        assert self.detector.name == "Hanford"
 
     def test_status(self):
-        assert self.hanford.status == "Down"
+        assert self.detector.status == "Down"
 
     def test_duration(self):
-        assert self.hanford.duration == timedelta(hours=5, minutes=37)
+        assert self.detector.status_duration == timedelta(hours=5, minutes=37)
 
 
+@pytest.fixture(scope="class")
+def livingston_not_locked(request):
+    detector = Detector("Livingston", source=source2)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("livingston_not_locked")
 class TestReplacingUnderscoreInStateWithSpace(TestCase):
-    def setUp(self):
-        self.detector = Detector("Livingston", source=source2)
-
     def test_name(self):
         assert self.detector.name == "Livingston"
 
@@ -74,13 +106,19 @@ class TestReplacingUnderscoreInStateWithSpace(TestCase):
         assert self.detector.status == "Not locked"
 
     def test_duration(self):
-        assert self.detector.duration == timedelta(hours=5, minutes=37)
+        assert self.detector.status_duration == timedelta(hours=5, minutes=37)
 
 
+@pytest.fixture(scope="class")
+def virgo_science(request):
+    detector = Detector("Virgo", source=source2)
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("virgo_science")
 class TestHoursOver24(TestCase):
-    def setUp(self):
-        self.detector = Detector("Virgo", source=source2)
-
     def test_name(self):
         assert self.detector.name == "Virgo"
 
@@ -88,13 +126,19 @@ class TestHoursOver24(TestCase):
         assert self.detector.status == "Science"
 
     def test_duration(self):
-        assert self.detector.duration == timedelta(hours=36, minutes=44)
+        assert self.detector.status_duration == timedelta(hours=36, minutes=44)
 
 
+@pytest.fixture(scope="class")
+def virgo_info_too_old(request):
+    detector = Detector("Virgo", source="./data/detector_status_no_time.html")
+    request.cls.detector = detector
+
+    yield
+
+
+@pytest.mark.usefixtures("virgo_info_too_old")
 class TestWithoutTime(TestCase):
-    def setUp(self):
-        self.detector = Detector("Virgo", source="./data/detector_status_no_time.html")
-
     def test_name(self):
         assert self.detector.name == "Virgo"
 
@@ -102,4 +146,4 @@ class TestWithoutTime(TestCase):
         assert self.detector.status == "Info too old"
 
     def test_duration(self):
-        assert self.detector.duration == timedelta(0)
+        assert self.detector.status_duration == timedelta(0)

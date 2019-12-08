@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import logging
 import urllib.error
+import time
 from typing import Dict
 
 import dateutil.parser
@@ -9,7 +10,6 @@ import ligo.gracedb.exceptions
 import timeago
 from ligo.gracedb.rest import GraceDb
 
-from functions import progress_bar
 from image import ImageFromUrl
 from voevent import VOEvent
 
@@ -21,11 +21,11 @@ class Events(object):
 
     def __init__(self):
         self.client = GraceDb()
-        self.events = {}
+        self.data = {}
         self.loop = asyncio.get_event_loop()
         self.loop.create_task(self._periodic_event_updater())
 
-    def update_all_events(self):
+    def update_all(self):
         """
         Get the latest events from the Grace database.
 
@@ -38,15 +38,17 @@ class Events(object):
         https://gracedb.ligo.org/latest/
         """
         events = self.client.superevents(query="Production", orderby=["-created"])
-        events = list(events)
+        self.data = {}
 
-        self.events = {}
-        total_events = len(events)
-        for i, _event in enumerate(events):
-            progress_bar(i, total_events, "Updating events")
-            self.update_single_event(_event["superevent_id"])
+        logging.info("Updating all events. This might take a minute.")
+        start = time.time()
+        for i, event in enumerate(events):
+            self._add_to_event_data(event)
 
-    def update_single_event(self, event_id: str):
+        end = time.time()
+        logging.info(f"Updating {i} events took {round(end - start, 2)} s.")
+
+    def update_single(self, event_id: str):
         """
         Update and store the data of a single event in the event dictionary.
 
@@ -61,32 +63,42 @@ class Events(object):
         # Make sure the event id has the right upper and lower case format
         _event_id = event_id[0].upper() + event_id[1:].lower()
 
+        start = time.time()
         try:
             event = self.client.superevent(_event_id)
             event = event.json()
         except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
             logging.error(f"Could not find event {_event_id}. Exception: {e}")
             return
+        end = time.time()
+        print(f"Updating single event from database took {round(end - start, 2)} s.")
 
-        # ADVNO = advocate says event is not ok.
+        self._add_to_event_data(event)
+
+    def _add_to_event_data(self, event):
+        # ADVNO = human vetting found event is not ok.
         if "ADVNO" in event["labels"]:
             return
         else:
-            event.pop("superevent_id")
+            event_id = event.pop("superevent_id")
             event["created"] = dateutil.parser.parse(event["created"])
-            self.events[_event_id] = event
+            self.data[event_id] = event
 
-            voevent = VOEvent()
-            try:
-                voevent.from_event_id(_event_id)
-                self._add_event_distance(voevent)
-                self._add_event_classification(voevent)
-            except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
-                logging.warning(
-                    f"Couldn't get info from VOEvent file with event id {_event_id}"
-                    f"Exception: {e}"
-                )
-                pass
+            self._add_event_info_from_voevent(event_id)
+
+    def _add_event_info_from_voevent(self, event_id: str):
+        voevent = VOEvent()
+        try:
+            voevent.from_event_id(event_id)
+            self._add_event_distance(voevent)
+            self._add_event_classification(voevent)
+            self._add_instruments(voevent)
+        except (ligo.gracedb.exceptions.HTTPError, urllib.error.HTTPError) as e:
+            logging.warning(
+                f"Couldn't get info from VOEvent file with event id {event_id}"
+                f"Exception: {e}"
+            )
+            pass
 
     def _add_event_distance(self, voevent: VOEvent):
         """
@@ -100,8 +112,8 @@ class Events(object):
         -------
         None
         """
-        self.events[voevent.id]["distance_mean_Mly"] = voevent.distance
-        self.events[voevent.id]["distance_std_Mly"] = voevent.distance_std
+        self.data[voevent.id]["distance_mean_Mly"] = voevent.distance
+        self.data[voevent.id]["distance_std_Mly"] = voevent.distance_std
 
     def _add_event_classification(self, voevent: VOEvent):
         """
@@ -114,8 +126,22 @@ class Events(object):
         -------
         None
         """
-        self.events[voevent.id]["event_types"] = voevent.p_astro
-        self.events[voevent.id]["most_likely"] = self.get_likely_event_type(voevent.id)
+        self.data[voevent.id]["event_types"] = voevent.p_astro
+        self.data[voevent.id]["most_likely"] = self.get_likely_event_type(voevent.id)
+
+    def _add_instruments(self, voevent: VOEvent):
+        """
+
+        Parameters
+        ----------
+        voevent
+
+        Returns
+        -------
+
+        """
+        self.data[voevent.id]["instruments_short"] = voevent.seen_by_short
+        self.data[voevent.id]["instruments_long"] = voevent.seen_by_long
 
     async def _periodic_event_updater(self):
         """
@@ -130,7 +156,7 @@ class Events(object):
             await asyncio.sleep(delay=36000)
 
             logging.info("Refreshing event database.")
-            self.update_all_events()
+            self.update_all()
 
     def get_likely_event_type(self, event_id: str) -> str:
         """
@@ -147,7 +173,7 @@ class Events(object):
             Most likely event type.
         """
         try:
-            event_types = self.events[event_id]["event_types"]
+            event_types = self.data[event_id]["event_types"]
             most_likely, _ = sorted(
                 event_types.items(), key=lambda value: value[1], reverse=True
             )[0]
@@ -167,7 +193,7 @@ class Events(object):
         dict
             Latest event.
         """
-        for id, info in self.events.items():
+        for id, info in self.data.items():
             return {id: info}
 
         return {"": dict()}

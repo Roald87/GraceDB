@@ -1,17 +1,23 @@
 from unittest import TestCase
 
+import pytest
 from pytest import approx
 
 from functions import mpc_to_mly
 from voevent import VOEvent
 
 
-class TestFromEventId(TestCase):
-    def setUp(self) -> None:
-        self.voe = VOEvent()
-        event_id = "S190521r"
-        self.voe.from_event_id(event_id)
+@pytest.fixture(scope="class")
+def event_id(request):
+    voe = VOEvent()
+    voe.from_event_id("S190521r")
+    request.cls.voe = voe
 
+    yield
+
+
+@pytest.mark.usefixtures("event_id")
+class TestFromEventId(TestCase):
     def test_distance(self):
         assert self.voe.distance == approx(mpc_to_mly(1136.13018), abs=1e-4)
 
@@ -20,6 +26,12 @@ class TestFromEventId(TestCase):
 
     def test_id(self):
         assert self.voe.id.lower() == "s190521r"
+
+    def test_short_names(self):
+        assert self.voe.seen_by_short == ["H1", "L1"]
+
+    def test_long_names(self):
+        assert self.voe.seen_by_long == ["Hanford", "Livingston"]
 
     def test_p_astro(self):
         expected = {
@@ -33,11 +45,17 @@ class TestFromEventId(TestCase):
         assert self.voe.p_astro == approx(expected, abs=1e-5)
 
 
-class TestFromMockDataFile(TestCase):
-    def setUp(self) -> None:
-        self.voe = VOEvent()
-        self.voe.from_file("./data/MS181101ab-1-Preliminary.xml")
+@pytest.fixture(scope="class")
+def mock_event_file(request):
+    voe = VOEvent()
+    voe.from_file("./data/MS181101ab-1-Preliminary.xml")
+    request.cls.voe = voe
 
+    yield
+
+
+@pytest.mark.usefixtures("mock_event_file")
+class EventFromMockEvent(TestCase):
     def test_distance(self):
         assert self.voe.distance == approx(mpc_to_mly(39.7699960), abs=1e-4)
 
@@ -59,21 +77,27 @@ class TestFromMockDataFile(TestCase):
         assert self.voe.p_astro == approx(expected, abs=1e-5)
 
 
-class TestFromRealEventFile(TestCase):
-    def setUp(self) -> None:
-        self.voe = VOEvent()
-        self.voe.from_file("./data/S190701ah-3-Update.xml")
+@pytest.fixture(scope="class")
+def real_event_file(request):
+    voe = VOEvent()
+    voe.from_file("./data/S190701ah-3-Update.xml")
+    request.cls.voe = voe
 
-    def test_distance(self):
+    yield
+
+
+@pytest.mark.usefixtures("real_event_file")
+class TestFromRealEventFile(TestCase):
+    def test_distance3(self):
         assert self.voe.distance == approx(mpc_to_mly(1848.9383223), abs=1e-4)
 
-    def test_distance_std(self):
+    def test_distance_std3(self):
         assert self.voe.distance_std == approx(mpc_to_mly(445.5334849617994), abs=1e-4)
 
-    def test_id(self):
+    def test_id3(self):
         assert self.voe.id.lower() == "s190701ah"
 
-    def test_p_astro(self):
+    def test_p_astro3(self):
         expected = {
             "BNS": 0.0,
             "NSBH": 0.0,
