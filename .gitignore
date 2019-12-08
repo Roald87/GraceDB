@@ -14,3 +14,4 @@ wily*
 wily_reporter.sh
 *.json
 plot_subscribers.py
+*.png
