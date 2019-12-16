@@ -14,34 +14,26 @@ from ngrok import get_ngrok_url
 logging.basicConfig(**logging_kwargs)  # type: ignore
 
 
-def post_preliminary():
-    preliminary_message = fake_telegram_update(preliminary_command)
-
-    res = requests.post(f"{get_ngrok_url()}/{secret}", json=preliminary_message)
-    if res.ok:
-        logging.info(f"Send preliminary message to GraceDbBot")
-    else:
-        logging.error("Failed to POST preliminary to webhook URL.")
-
-
-def post_update(event_id):
-    update_message = fake_telegram_update(f"{update_command} {event_id}")
-
-    res = requests.post(f"{get_ngrok_url()}/{secret}", json=update_message)
-    if res.ok:
-        logging.info(f"Send update message to GraceDbBot")
-    else:
-        logging.error("Failed to POST update to webhook URL.")
+def post_preliminary(event_id):
+    _post_message(event_id, "new event", preliminary_command)
 
 
 def post_retraction(event_id):
-    retraction_message = fake_telegram_update(f"{retraction_command} {event_id}")
+    _post_message(event_id, "retraction", retraction_command)
 
-    res = requests.post(f"{get_ngrok_url()}/{secret}", json=retraction_message)
+
+def post_update(event_id):
+    _post_message(event_id, "update", update_command)
+
+
+def _post_message(event_id: str, message_type: str, command: str):
+    message = fake_telegram_update(f"{command} {event_id}")
+
+    res = requests.post(f"{get_ngrok_url()}/{secret}", json=message)
     if res.ok:
-        logging.info(f"Send retraction message to GraceDbBot")
+        logging.info(f"Send {message_type} message to GraceDbBot")
     else:
-        logging.error("Failed to POST retraction to webhook URL.")
+        logging.error(f"Failed to POST {message_type} to webhook URL.")
 
 
 def fake_telegram_update(command: str):

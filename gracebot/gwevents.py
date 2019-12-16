@@ -71,7 +71,9 @@ class Events(object):
             logging.error(f"Could not find event {_event_id}. Exception: {e}")
             return
         end = time.time()
-        print(f"Updating single event from database took {round(end - start, 2)} s.")
+        logging.info(
+            f"Updating single event from database took {round(end - start, 2)} s."
+        )
 
         self._add_to_event_data(event)
 

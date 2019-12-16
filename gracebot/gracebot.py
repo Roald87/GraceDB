@@ -1,6 +1,5 @@
 import logging
 from collections import Counter, defaultdict
-
 import aiogram
 from aiogram import Bot, types
 from aiogram.utils.emoji import emojize
@@ -41,7 +40,8 @@ class GraceBot(Bot):
         }
 
     async def send_preliminary(self, message):
-        self.events.update_all()
+        event_id = event_id_from_message(message)
+        self.events.update_single(event_id)
 
         event_id = list(self.events.data.keys())[0]
         if event_id in self.new_event_messages_send.data:
