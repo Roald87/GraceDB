@@ -35,10 +35,7 @@ def process_gcn(payload, root):
     }
 
     alert_type = params["AlertType"]
-    if alert_type.lower() in ["update", "retraction"]:
-        message_poster[alert_type](params["GraceID"])
-    else:
-        message_poster[alert_type]()
+    message_poster[alert_type](params["GraceID"])
 
 
 def test_send_preliminairy():
