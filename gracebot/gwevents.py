@@ -37,7 +37,7 @@ class Events(object):
         --------
         https://gracedb.ligo.org/latest/
         """
-        events = self.client.superevents(query="Production", orderby=["-created"])
+        events = self.client.superevents(query="-ADVNO", orderby=["-created"])
         self.data = {}
 
         logging.info("Updating all events. This might take a minute.")
@@ -78,15 +78,11 @@ class Events(object):
         self._add_to_event_data(event)
 
     def _add_to_event_data(self, event):
-        # ADVNO = human vetting found event is not ok.
-        if "ADVNO" in event["labels"]:
-            return
-        else:
-            event_id = event.pop("superevent_id")
-            event["created"] = dateutil.parser.parse(event["created"])
-            self.data[event_id] = event
+        event_id = event.pop("superevent_id")
+        event["created"] = dateutil.parser.parse(event["created"])
+        self.data[event_id] = event
 
-            self._add_event_info_from_voevent(event_id)
+        self._add_event_info_from_voevent(event_id)
 
     def _add_event_info_from_voevent(self, event_id: str):
         voevent = VOEvent()
