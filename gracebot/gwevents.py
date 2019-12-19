@@ -42,7 +42,21 @@ class Events(object):
 
         logging.info("Updating all events. This might take a minute.")
         start = time.time()
-        for i, event in enumerate(events):
+        for i, event in enumerate(events, 1):
+            self._add_to_event_data(event)
+
+        end = time.time()
+        logging.info(f"Updating {i} events took {round(end - start, 2)} s.")
+
+    def update_events_last_week(self):
+        logging.info("Updating all events until 1 week ago. This might take a minute.")
+        start = time.time()
+        events = self.client.superevents(
+            query="created: 1 week ago .. now -ADVNO", orderby=["-created"]
+        )
+
+        for i, event in enumerate(events, 1):
+            logging.info(f"Updating event {event['superevent_id']}")
             self._add_to_event_data(event)
 
         end = time.time()
@@ -96,7 +110,6 @@ class Events(object):
                 f"Couldn't get info from VOEvent file with event id {event_id}"
                 f"Exception: {e}"
             )
-            pass
 
     def _add_event_distance(self, voevent: VOEvent):
         """

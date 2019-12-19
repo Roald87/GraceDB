@@ -41,12 +41,12 @@ class GraceBot(Bot):
 
     async def send_preliminary(self, message):
         event_id = event_id_from_message(message)
-        self.events.update_single(event_id)
+        logging.info(f"Event to update from preliminary message: {event_id}")
 
-        event_id = list(self.events.data.keys())[0]
         if event_id in self.new_event_messages_send.data:
             return
         else:
+            self.events.update_events_last_week()
             self.new_event_messages_send.add(event_id)
 
         text = f"A new event has been measured!\n\n"
@@ -94,7 +94,11 @@ class GraceBot(Bot):
         -------
         None
         """
-        event = self.events.data[event_id]
+        try:
+            event = self.events.data[event_id]
+        except KeyError:
+            logging.error(f"Warning couldn't find event with id {event_id}")
+            return
 
         link = f"https://gracedb.ligo.org/superevents/{event_id}/view/"
         text = (
