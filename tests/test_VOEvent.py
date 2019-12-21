@@ -4,13 +4,12 @@ import pytest
 from pytest import approx
 
 from functions import mpc_to_mly
-from voevent import VOEvent
+from voevent import VOEventFromXml, VOEventFromEventId
 
 
 @pytest.fixture(scope="class")
 def event_id(request):
-    voe = VOEvent()
-    voe.from_event_id("S190521r")
+    voe = VOEventFromEventId("S190521r")
     request.cls.voe = voe
 
     yield
@@ -47,8 +46,7 @@ class TestFromEventId(TestCase):
 
 @pytest.fixture(scope="class")
 def mock_event_file(request):
-    voe = VOEvent()
-    voe.from_file("./data/MS181101ab-1-Preliminary.xml")
+    voe = VOEventFromXml("./data/MS181101ab-1-Preliminary.xml")
     request.cls.voe = voe
 
     yield
@@ -79,8 +77,7 @@ class EventFromMockEvent(TestCase):
 
 @pytest.fixture(scope="class")
 def real_event_file(request):
-    voe = VOEvent()
-    voe.from_file("./data/S190701ah-3-Update.xml")
+    voe = VOEventFromXml("./data/S190701ah-3-Update.xml")
     request.cls.voe = voe
 
     yield

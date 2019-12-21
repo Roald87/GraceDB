@@ -74,10 +74,22 @@ class VOEvent(object):
             for elem in root.iterfind(".//Param")
         }
 
+
+class VOEventFromXml(VOEvent):
+    def __init__(self, xml_filename: str):
+        super().__init__()
+        self.from_file(xml_filename)
+
     def from_file(self, filename: str) -> None:
         root = ElementTree.parse(filename).getroot()
         self._data = self._xml_to_dict(root)
         self._add_distance(self._data["skymap_fits"])
+
+
+class VOEventFromEventId(VOEvent):
+    def __init__(self, event_id: str):
+        super().__init__()
+        self.from_event_id(event_id)
 
     def from_event_id(self, event_id: str) -> None:
         """
