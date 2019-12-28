@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, List, Any
 from xml.etree import ElementTree
 
 from astropy.io import fits
@@ -69,13 +69,11 @@ class VOEvent(object):
 
 
 class VOEventFromXml(VOEvent):
-    def __init__(self, xml_filename: str):
+    def __init__(self):
         super().__init__()
-        self.xml_filename = xml_filename
-        self._get_event_data_from_xml()
 
-    def _get_event_data_from_xml(self) -> None:
-        root = ElementTree.parse(self.xml_filename).getroot()
+    def get(self, xml_filename: str) -> None:
+        root = ElementTree.parse(xml_filename).getroot()
         self._data = self._xml_to_dict(root)
         self._add_distance(self._data["skymap_fits"])
 
@@ -87,29 +85,30 @@ class VOEventFromXml(VOEvent):
 
 
 class VOEventFromEventId(VOEventFromXml):
-    def __init__(self, event_id: str):
-        self.event_id = event_id
+    def __init__(self):
         self._client = GraceDb()
-        xml = self._get_xml_data_from_gracedb()
-        super().__init__(xml)
+        self.event_id = ""
+        super().__init__()
 
-    def _get_xml_data_from_gracedb(self) -> str:
-        """
-        Get the most recent VOEvent of this event.
+    def get(self, event_id: str):
+        self.event_id = event_id
+        voevents = self._get_voevents_json(event_id)
+        voevents = self._sort_voevents_newest_first(voevents)
+        xml = self._try_get_latest_voevent(voevents)
+        super().get(xml)
 
-        Data is taken directly from the GraceDB.
+    def _get_voevents_json(self, event_id: str) -> List[Dict]:
+        response = self._client.voevents(event_id)
+        json_voevents = response.json()["voevents"]
 
-        Parameters
-        ----------
-        event_id : str
+        return json_voevents
 
-        Returns
-        -------
-        None
-        """
-        voevents = self._client.voevents(self.event_id).json()["voevents"]
-        voevents.sort(key=lambda x: x["N"], reverse=True)
+    def _sort_voevents_newest_first(self, voevents_json):
+        voevents_json.sort(key=lambda x: x["N"], reverse=True)
 
+        return voevents_json
+
+    def _try_get_latest_voevent(self, voevents: List[Dict[Any, Any]]):
         # For event S190517h the file 'S190517h-3-Initial.xml' was in the
         # voevent file list. However, this file doesn't exist. Therefore looping
         # over all until a existing file is found.
