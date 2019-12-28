@@ -85,16 +85,16 @@ def real_event_file(request):
 
 @pytest.mark.usefixtures("real_event_file")
 class TestFromRealEventFile(TestCase):
-    def test_distance3(self):
+    def test_distance(self):
         assert self.voe.distance == approx(mpc_to_mly(1848.9383223), abs=1e-4)
 
-    def test_distance_std3(self):
+    def test_distance_std(self):
         assert self.voe.distance_std == approx(mpc_to_mly(445.5334849617994), abs=1e-4)
 
-    def test_id3(self):
+    def test_id(self):
         assert self.voe.id.lower() == "s190701ah"
 
-    def test_p_astro3(self):
+    def test_p_astro(self):
         expected = {
             "BNS": 0.0,
             "NSBH": 0.0,

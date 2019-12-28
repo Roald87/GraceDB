@@ -14,7 +14,6 @@ logging.basicConfig(**logging_kwargs)  # type: ignore
 
 class VOEvent(object):
     def __init__(self):
-        self.client = GraceDb()
         self._data = {}
         self.distance = 0
         self.distance_std = 0
@@ -68,6 +67,18 @@ class VOEvent(object):
             )
             pass
 
+
+class VOEventFromXml(VOEvent):
+    def __init__(self, xml_filename: str):
+        super().__init__()
+        self.xml_filename = xml_filename
+        self._get_event_data_from_xml()
+
+    def _get_event_data_from_xml(self) -> None:
+        root = ElementTree.parse(self.xml_filename).getroot()
+        self._data = self._xml_to_dict(root)
+        self._add_distance(self._data["skymap_fits"])
+
     def _xml_to_dict(self, root: ElementTree.Element) -> Dict[str, str]:
         return {
             elem.attrib["name"]: elem.attrib["value"]
@@ -75,23 +86,14 @@ class VOEvent(object):
         }
 
 
-class VOEventFromXml(VOEvent):
-    def __init__(self, xml_filename: str):
-        super().__init__()
-        self.from_file(xml_filename)
-
-    def from_file(self, filename: str) -> None:
-        root = ElementTree.parse(filename).getroot()
-        self._data = self._xml_to_dict(root)
-        self._add_distance(self._data["skymap_fits"])
-
-
-class VOEventFromEventId(VOEvent):
+class VOEventFromEventId(VOEventFromXml):
     def __init__(self, event_id: str):
-        super().__init__()
-        self.from_event_id(event_id)
+        self.event_id = event_id
+        self._client = GraceDb()
+        xml = self._get_xml_data_from_gracedb()
+        super().__init__(xml)
 
-    def from_event_id(self, event_id: str) -> None:
+    def _get_xml_data_from_gracedb(self) -> str:
         """
         Get the most recent VOEvent of this event.
 
@@ -105,7 +107,7 @@ class VOEventFromEventId(VOEvent):
         -------
         None
         """
-        voevents = self.client.voevents(event_id).json()["voevents"]
+        voevents = self._client.voevents(self.event_id).json()["voevents"]
         voevents.sort(key=lambda x: x["N"], reverse=True)
 
         # For event S190517h the file 'S190517h-3-Initial.xml' was in the
@@ -114,14 +116,13 @@ class VOEventFromEventId(VOEvent):
         for voevent in voevents:
             url = voevent["links"]["file"]
             try:
-                xml = self.client.get(url)
-                root = ElementTree.parse(xml).getroot()
-                self._data = self._xml_to_dict(root)
-                break
+                xml = self._client.get(url)
+                return xml
             except HTTPError:
                 if voevent["N"] == 1:
-                    logging.error(f"Can't find VOEvent for event {event_id}")
+                    logging.error(f"Can't find VOEvent for event {self.event_id}")
                     raise HTTPError
                 else:
                     logging.warning(f"Failed to get voevent from {url}")
-        self._add_distance(self._data["skymap_fits"])
+
+        return ""
