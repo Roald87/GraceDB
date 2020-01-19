@@ -65,16 +65,19 @@ async def remove_subscriber(message: types.Message):
 
 
 @dp.message_handler(commands=[preliminary_command])
+@dp.async_task
 async def send_preliminary(message: types.Message):
     await bot.send_preliminary(message)
 
 
 @dp.message_handler(commands=[update_command])
+@dp.async_task
 async def send_update(message: types.Message):
     await bot.send_update(message)
 
 
 @dp.message_handler(commands=[retraction_command])
+@dp.async_task
 async def send_retraction(message: types.Message):
     await bot.send_retraction(message)
 
