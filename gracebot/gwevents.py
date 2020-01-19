@@ -11,7 +11,7 @@ import timeago
 from ligo.gracedb.rest import GraceDb
 
 from image import ImageFromUrl
-from voevent import VOEvent
+from voevent import VOEvent, VOEventFromEventId
 
 
 class Events(object):
@@ -99,9 +99,9 @@ class Events(object):
         self._add_event_info_from_voevent(event_id)
 
     def _add_event_info_from_voevent(self, event_id: str):
-        voevent = VOEvent()
+        voevent = VOEventFromEventId()
         try:
-            voevent.from_event_id(event_id)
+            voevent.get(event_id)
             self._add_event_distance(voevent)
             self._add_event_classification(voevent)
             self._add_instruments(voevent)
