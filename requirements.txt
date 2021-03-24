@@ -9,6 +9,6 @@ pygcn==0.1.19
 ligo_gracedb==2.2.2
 pygcn==0.1.19
 matplotlib==3.1.2
-Pillow==6.2.0
+Pillow==8.1.1
 python_dateutil==2.8.1
 emoji==0.5.4
