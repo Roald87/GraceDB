@@ -1,17 +1,22 @@
-config.py
+# Python specific
 *.pyc
-gracebot/gracebot/img/
-gracebot/tests/gracebot/img/
-gracebot/img/
-LICENSE.md
+.mypy_cache/
+.pytest_cache/
+
+# PyCharm
+.idea/
+
+# Wily
+wily_reporter.sh
+wily*
+
+# Project specific files
+*.png
+config.py
+new_event_messages_send.txt
+plot_subscribers.py
 subscribers.txt
 subscribed.txt
-new_event_messages_send.txt
-wily*
-*.xml
-.idea/
-*.out
-wily_reporter.sh
-*.json
-plot_subscribers.py
-*.png
+
+# Project specific folders
+gracebot/img/
