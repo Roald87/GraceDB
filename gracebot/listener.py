@@ -9,7 +9,7 @@ from config import logging_kwargs
 
 logging.basicConfig(**logging_kwargs)  # type: ignore
 
-test_data = Path("tests/data/")
+test_data = Path("gracebot/tests/data/")
 
 # Function to call every time a GCN is received.
 # Run only for notices of type

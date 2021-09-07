@@ -107,7 +107,7 @@ sorted_json_S190521r = [
 
 voevents_S190521r = {
     "https://gracedb.ligo.org/api/superevents/S190521r/files/S190521r-2-Initial.xml,0": read_xml(
-        "./data/S190521r-2-Initial.xml"
+        "./tests/data/S190521r-2-Initial.xml"
     )
 }
 

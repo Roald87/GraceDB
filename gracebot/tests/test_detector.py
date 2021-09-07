@@ -5,8 +5,8 @@ from unittest import TestCase
 
 from detector import Detector
 
-source = "./data/detector_status.html"
-source2 = "./data/detector_status2.html"
+source = "./tests/data/detector_status.html"
+source2 = "./tests/data/detector_status2.html"
 
 
 @pytest.fixture(scope="class")
