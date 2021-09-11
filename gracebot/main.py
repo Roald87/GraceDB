@@ -6,12 +6,12 @@ from aiogram.utils.executor import start_webhook
 
 from config import (
     API_TOKEN,
-    logging_kwargs,
     preliminary_command,
     retraction_command,
     secret,
     update_command,
 )
+from logconfig import logging_kwargs
 from gracebot import GraceBot
 from ngrok import get_ngrok_url, get_port
 

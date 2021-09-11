@@ -6,7 +6,7 @@ from astropy.io import fits
 from ligo.gracedb.exceptions import HTTPError
 from ligo.gracedb.rest import GraceDb
 
-from config import logging_kwargs
+from logconfig import logging_kwargs
 from functions import mpc_to_mly
 
 logging.basicConfig(**logging_kwargs)  # type: ignore

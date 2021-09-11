@@ -2,13 +2,8 @@ import logging
 
 import requests
 
-from config import (
-    logging_kwargs,
-    preliminary_command,
-    retraction_command,
-    secret,
-    update_command,
-)
+from config import preliminary_command, retraction_command, secret, update_command
+from logconfig import logging_kwargs
 from ngrok import get_ngrok_url
 
 logging.basicConfig(**logging_kwargs)  # type: ignore
