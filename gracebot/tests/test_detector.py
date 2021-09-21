@@ -5,8 +5,8 @@ from unittest import TestCase
 
 from detector import Detector
 
-source = "./tests/data/detector_status.html"
-source2 = "./tests/data/detector_status2.html"
+source = "gracebot/tests/data/detector_status.html"
+source2 = "gracebot/tests/data/detector_status2.html"
 
 
 @pytest.fixture(scope="class")
@@ -131,7 +131,9 @@ class TestHoursOver24(TestCase):
 
 @pytest.fixture(scope="class")
 def virgo_info_too_old(request):
-    detector = Detector("Virgo", source="tests/data/detector_status_no_time.html")
+    detector = Detector(
+        "Virgo", source="gracebot/tests/data/detector_status_no_time.html"
+    )
     request.cls.detector = detector
 
     yield

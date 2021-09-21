@@ -39,7 +39,7 @@ def test_get_latest_voevent(mock_get):
     voevent = VOEventFromEventId()
     result = voevent._try_get_latest_voevent(test_data.sorted_json_S190521r)
 
-    expected = test_data.read_xml("tests/data/S190521r-2-Initial.xml")
+    expected = test_data.read_xml("gracebot/tests/data/S190521r-2-Initial.xml")
 
     assert result == expected
 
@@ -55,13 +55,13 @@ def test_get_latest_voevent_should_raise_http_error_on_latest_voevent_and_get_ol
     mock_get.return_value = Mock(ok=True)
     mock_get.side_effect = (
         HTTPError(status=400, reason="Bad Request", message="Bad Request"),
-        test_data.read_xml("tests/data/S190517h-2-Initial.xml"),
+        test_data.read_xml("gracebot/tests/data/S190517h-2-Initial.xml"),
     )
 
     voevent = VOEventFromEventId()
     result = voevent._try_get_latest_voevent(test_data.sorted_json_S190517h)
 
-    expected = test_data.read_xml("tests/data/S190517h-2-Initial.xml")
+    expected = test_data.read_xml("gracebot/tests/data/S190517h-2-Initial.xml")
 
     assert result == expected
 
@@ -76,7 +76,7 @@ def event_id(request):
         with patch.object(
             ligo.gracedb.rest.GraceDb,
             "get",
-            return_value="tests/data/S190521r-2-Initial.xml",
+            return_value="gracebot/tests/data/S190521r-2-Initial.xml",
         ):
             voe = VOEventFromEventId()
             voe.get("S190521r")
@@ -118,7 +118,7 @@ class TestFromEventId(TestCase):
 @pytest.fixture(scope="class")
 def mock_event_file(request):
     voe = VOEventFromXml()
-    voe.get("tests/data/MS181101ab-1-Preliminary.xml")
+    voe.get("gracebot/tests/data/MS181101ab-1-Preliminary.xml")
 
     request.cls.voe = voe
 
@@ -151,7 +151,7 @@ class EventFromMockEvent(TestCase):
 @pytest.fixture(scope="class")
 def real_event_file(request):
     voe = VOEventFromXml()
-    voe.get("tests/data/S190701ah-3-Update.xml")
+    voe.get("gracebot/tests/data/S190701ah-3-Update.xml")
 
     request.cls.voe = voe
 
