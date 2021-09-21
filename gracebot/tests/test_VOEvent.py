@@ -7,6 +7,7 @@ from pytest import approx
 from functions import mpc_to_mly
 from voevent import VOEventFromXml, VOEventFromEventId
 import tests.voevent_test_data as test_data
+import ligo
 from ligo.gracedb.exceptions import HTTPError
 
 
@@ -67,8 +68,18 @@ def test_get_latest_voevent_should_raise_http_error_on_latest_voevent_and_get_ol
 
 @pytest.fixture(scope="class")
 def event_id(request):
-    voe = VOEventFromEventId()
-    voe.get("S190521r")
+    with patch.object(
+        VOEventFromEventId,
+        "_get_voevents_json",
+        return_value=test_data.unsorted_json_S190521r,
+    ):
+        with patch.object(
+            ligo.gracedb.rest.GraceDb,
+            "get",
+            return_value="tests/data/S190521r-2-Initial.xml",
+        ):
+            voe = VOEventFromEventId()
+            voe.get("S190521r")
 
     request.cls.voe = voe
 
